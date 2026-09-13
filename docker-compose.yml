@@ -1,0 +1,89 @@
+# ==========================================================
+#  Smart Logistics — local altyapi
+#  Bu dosyada SADECE altyapi var. .NET servisleri Step 04'ten
+#  itibaren eklenecek ve depends_on ile asagidaki healthcheck'leri
+#  bekleyecek.
+#
+#  Calistirmak icin:  cp .env.example .env  &&  docker compose up -d
+# ==========================================================
+
+# Proje adi: container/volume/network on eki. Verilmezse klasor
+# adi kullanilir ("smart-logistics-platform-microservice") — uzun ve cirkin.
+name: smart-logistics
+
+services:
+
+  # ---------------------------------------------------------
+  #  PostgreSQL — database-per-service (tek container, 6 db)
+  # ---------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: sl-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Entrypoint'in baglanacagi varsayilan db; servis db'leri
+      # init script'inde ayrica olusturuluyor.
+      POSTGRES_DB: postgres
+      # init script bu degiskenleri okuyor:
+      AUTH_DB: ${AUTH_DB}
+      ORDER_DB: ${ORDER_DB}
+      SHIPMENT_DB: ${SHIPMENT_DB}
+      COURIER_DB: ${COURIER_DB}
+      DELIVERY_DB: ${DELIVERY_DB}
+      NOTIFICATION_DB: ${NOTIFICATION_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Sadece veri dizini BOSKEN calisir. Db listesi degisirse
+      # "docker compose down -v" gerekir.
+      - ./infrastructure/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # $$ = compose interpolasyonundan kacis; degisken container
+      # icinde cozulsun diye.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - logistics-net
+
+  # ---------------------------------------------------------
+  #  RabbitMQ — event broker (+ management UI)
+  #  Exchange/queue burada TANIMLANMIYOR; Step 06'da kod declare edecek.
+  # ---------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: sl-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
+    ports:
+      - "${RABBITMQ_PORT}:5672"            # amqp
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672" # web arayuz
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      # RabbitMQ acilisi yavas; erken "unhealthy" damgasi yememesi icin.
+      start_period: 40s
+    networks:
+      - logistics-net
+
+# Named volume: Docker yonetir. Bind mount degil — Windows'ta
+# dosya izni/performans derdi cikarmaz.
+volumes:
+  postgres-data:
+  rabbitmq-data:
+
+networks:
+  logistics-net:
+    driver: bridge
