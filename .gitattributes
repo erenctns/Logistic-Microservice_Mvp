@@ -1,0 +1,34 @@
+# ==========================================================
+#  Satir sonu normalizasyonu
+#  Depoda HER ZAMAN LF saklanir. Windows'ta calissan da,
+#  Linux container'da calissan da ayni bayt'lari gorur.
+# ==========================================================
+
+# Varsayilan: metin dosyalarini otomatik algila, LF ile yaz
+* text=auto eol=lf
+
+# ---------- LF zorunlu (Linux container'da calisir) ----------
+# CRLF'li bir shell script container'da
+# "bad interpreter: /bin/sh^M: no such file or directory" verir.
+*.sh          text eol=lf
+Dockerfile    text eol=lf
+*.Dockerfile  text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+.env.example  text eol=lf
+
+# ---------- CRLF zorunlu (sadece Windows'ta calisir) ----------
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+
+# ---------- Ikili dosyalar: dokunma ----------
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.dll  binary
+*.pfx  binary
