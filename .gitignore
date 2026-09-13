@@ -1,0 +1,83 @@
+# ==========================================================
+#  ⚠️  BU REPO İLERİDE PUBLIC OLACAK
+#  Aşağıdaki "çalışma dokümanları" bloğunu ASLA kaldırma.
+#  Bir kez commit'lenen dosya git geçmişinde sonsuza kadar kalır —
+#  sonradan silmek onu geçmişten çıkarmaz.
+# ==========================================================
+
+# ---------- Çalışma dokümanları (public'e girmeyecek) ----------
+/docs/
+/CLAUDE.md
+/.claude/
+/AGENTS.md
+/.cursorrules
+/.windsurfrules
+/.antigravity/
+
+# ---------- Ortam / Sırlar ----------
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+appsettings.Development.local.json
+appsettings.Local.json
+secrets.json
+*.pem
+*.key
+
+# ---------- .NET ----------
+bin/
+obj/
+out/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+project.lock.json
+artifacts/
+
+# Test / coverage
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+coverage*.info
+coverage.cobertura.xml
+coveragereport/
+*.trx
+.coverlet/
+
+# ---------- Frontend ----------
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+
+# ---------- IDE ----------
+.vs/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# ---------- Docker / Runtime ----------
+docker-compose.override.yml
+**/postgres-data/
+**/rabbitmq-data/
