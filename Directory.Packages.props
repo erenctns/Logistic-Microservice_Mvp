@@ -1,0 +1,50 @@
+<Project>
+
+  <!-- ==========================================================
+       Central Package Management (CPM)
+       Paket SURUMLERI burada, tek yerde. csproj dosyalarinda
+       sadece paket ADI yazilir:
+
+         <PackageReference Include="xunit.v3" />   <- Version YOK
+
+       20 projeye cikarken "bir proje 9.0.3'te kalmis" durumunu
+       yapisal olarak imkansiz kilar.
+       ========================================================== -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- Test framework.
+       xUnit v3, Microsoft.Testing.Platform (MTP) uzerinde calisir; eski VSTest
+       dunyasinin paketleri (Microsoft.NET.Test.Sdk, xunit.runner.visualstudio,
+       coverlet.collector) .NET 10'da GEREKMIYOR ve VSTest yolunu tetikleyip
+       hataya sebep oluyor. Coverage da MTP'nin kendi eklentisiyle aliniyor. -->
+  <ItemGroup>
+    <PackageVersion Include="xunit.v3" Version="4.0.1" />
+    <!-- Test ICERMEYEN yardimci kutuphaneler icin: IAsyncLifetime, ICollectionFixture
+         gibi tipleri verir ama calistirici (runner) getirmez, Exe zorunlulugu yok. -->
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="4.0.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
+  </ItemGroup>
+
+  <!-- Assertion ve mock -->
+  <ItemGroup>
+    <!-- AwesomeAssertions: FluentAssertions v7'nin Apache-2.0 fork'u.
+         FluentAssertions v8 ticari lisansa gecti (ADR-005). -->
+    <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
+
+    <!-- NSubstitute: surumu simdiden sabit, ama HENUZ hicbir projede
+         referans verilmedi. Ilk kullanim Step 05 handler testleri.
+         (Moq kullanilmiyor — SponsorLink, ADR-005.) -->
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+  </ItemGroup>
+
+  <!-- Integration test altyapisi -->
+  <ItemGroup>
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
+    <PackageVersion Include="Respawn" Version="7.0.0" />
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
+  </ItemGroup>
+
+</Project>
