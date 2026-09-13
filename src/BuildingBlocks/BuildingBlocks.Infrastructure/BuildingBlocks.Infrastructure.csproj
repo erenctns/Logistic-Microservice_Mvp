@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk"><!-- En disttaki katman: Application'daki sozlesmeleri IMPLEMENT eder.
+       Teknoloji paketleri (EF Core, RabbitMQ.Client) buraya gelecek. -->
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\BuildingBlocks.Application\BuildingBlocks.Application.csproj" />
+  </ItemGroup>
+</Project>

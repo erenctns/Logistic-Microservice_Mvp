@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- MIMARI KURAL: burada ASLA <PackageReference> olmayacak.
+       Domain katmani saf C#'tir; EF Core, RabbitMQ, ASP.NET yok.
+       Ayarlar kokteki Directory.Build.props'tan geliyor. -->
+
+</Project>

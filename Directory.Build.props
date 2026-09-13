@@ -1,0 +1,30 @@
+<Project>
+
+  <!-- ==========================================================
+       Bu dosya, altindaki TUM projelere otomatik uygulanir.
+       Amac: ayarin tek kaynagi olsun; 20 csproj'da ayni satirlar
+       tekrar edilmesin ve biri digerlerinden sapmasin.
+       ========================================================== -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+
+    <!-- Derleyici "bu referans null olabilir" uyarilarini acar. -->
+    <Nullable>enable</Nullable>
+
+    <!-- System, System.Linq gibi using'ler otomatik gelir. -->
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Uyarilar hata sayilir: ilk gunden temiz derleme.
+         Birikmis uyari, icinde gercek hatanin saklandigi cop yiginidir. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Konvansiyon: proje "BuildingBlocks.Domain" ->
+         namespace/assembly "SmartLogistics.BuildingBlocks.Domain" -->
+    <RootNamespace>SmartLogistics.$(MSBuildProjectName)</RootNamespace>
+    <AssemblyName>SmartLogistics.$(MSBuildProjectName)</AssemblyName>
+  </PropertyGroup>
+
+</Project>

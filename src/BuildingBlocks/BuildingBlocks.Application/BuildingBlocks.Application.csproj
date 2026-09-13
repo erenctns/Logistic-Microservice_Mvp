@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk"><!-- Sadece Domain'e bagimli. Interface'ler burada TANIMLANIR,
+       implementasyon Infrastructure'da yapilir. -->
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\BuildingBlocks.Domain\BuildingBlocks.Domain.csproj" />
+  </ItemGroup>
+</Project>
