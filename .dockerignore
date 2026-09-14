@@ -1,0 +1,36 @@
+# ==========================================================
+#  Build context = repo koku. Buradaki hicbir sey imaja girmez.
+#  Amac: (1) imaji kuculttmek, (2) build'i hizlandirmak,
+#        (3) calisma dokumanlarinin ve sirlarin imaja SIZMAMASI.
+# ==========================================================
+
+# Derleme ciktilari (host'taki Windows binary'leri Linux imaja girmemeli)
+**/bin/
+**/obj/
+artifacts/
+
+# Sirlar ve calisma dokumanlari — imaja asla
+.env
+.env.*
+!.env.example
+docs/
+CLAUDE.md
+.claude/
+
+# Versiyon kontrolu ve IDE
+.git/
+.gitignore
+.gitattributes
+.github/
+.vs/
+.idea/
+.vscode/
+
+# Servis imajinin ihtiyaci olmayanlar
+tests/
+frontend/
+**/node_modules/
+README.md
+LICENSE
+docker-compose*.yml
+**/Dockerfile

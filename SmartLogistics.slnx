@@ -5,6 +5,13 @@
     <Project Path="src/BuildingBlocks/BuildingBlocks.Domain/BuildingBlocks.Domain.csproj" />
     <Project Path="src/BuildingBlocks/BuildingBlocks.Infrastructure/BuildingBlocks.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/services/" />
+  <Folder Name="/src/services/AuthService/">
+    <Project Path="src/services/AuthService/AuthService.Api/AuthService.Api.csproj" />
+    <Project Path="src/services/AuthService/AuthService.Application/AuthService.Application.csproj" />
+    <Project Path="src/services/AuthService/AuthService.Domain/AuthService.Domain.csproj" />
+    <Project Path="src/services/AuthService/AuthService.Infrastructure/AuthService.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/BuildingBlocks.IntegrationTests/BuildingBlocks.IntegrationTests.csproj" />
     <Project Path="tests/BuildingBlocks.UnitTests/BuildingBlocks.UnitTests.csproj" />

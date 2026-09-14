@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- "NE yapilir" katmani. Interface'ler burada TANIMLANIR.
+       Microsoft.Extensions.DependencyInjection.Abstractions: sadece
+       IServiceCollection tipi icin — DI kayitlarini katmanin kendisi yapsin diye. -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../AuthService.Domain/AuthService.Domain.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.Application/BuildingBlocks.Application.csproj" />
+  </ItemGroup>
+
+</Project>

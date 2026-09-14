@@ -40,6 +40,20 @@
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
   </ItemGroup>
 
+  <!-- Uygulama katmanlari -->
+  <ItemGroup>
+    <!-- Sadece soyut tipler (IServiceCollection, IConfiguration). Application ve
+         Infrastructure katmanlari kendi DI kayitlarini kendileri tanimlasin diye. -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.12" />
+
+    <!-- /health/ready endpoint'i Postgres'e gercekten baglanabilsin diye. -->
+    <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
+
+    <!-- Yerlesik OpenAPI: paylasilan framework'te DEGIL, ayri paket. -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+  </ItemGroup>
+
   <!-- Integration test altyapisi -->
   <ItemGroup>
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />

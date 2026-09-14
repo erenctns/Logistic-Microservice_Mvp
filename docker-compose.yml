@@ -78,6 +78,44 @@ services:
     networks:
       - logistics-net
 
+  # ---------------------------------------------------------
+  #  Auth Service — ilk mikroservis
+  #  Bu blok sonraki 5 servise sablon olacak: degisen sadece
+  #  isim, port ve database.
+  # ---------------------------------------------------------
+  auth-service:
+    build:
+      # Context REPO KOKU: servis, src/BuildingBlocks/* projelerine
+      # referans veriyor ve Docker context disini kopyalayamaz.
+      context: .
+      dockerfile: src/services/AuthService/AuthService.Api/Dockerfile
+    container_name: sl-auth
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        # Sadece "baslamis" degil, healthcheck'i GECMIS olmasini bekler.
+        # depends_on tek basina sirayi belirler, hazir olmayi degil.
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      # .NET'te "ConnectionStrings:AuthDb" ayari, ortam degiskeninde
+      # "__" ile yazilir (Linux env adinda ":" gecersiz).
+      # Sir appsettings.json'da DEGIL, .env'den geliyor.
+      ConnectionStrings__AuthDb: "Host=${POSTGRES_HOST};Port=5432;Database=${AUTH_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+    ports:
+      # Disaridan 8081, container icinde 8080 (ASP.NET 8+ varsayilani).
+      - "${AUTH_SERVICE_PORT}:8080"
+    healthcheck:
+      # LIVENESS kullaniliyor, readiness degil: Postgres bir an dusunce
+      # container restart edilmemeli.
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - logistics-net
+
 # Named volume: Docker yonetir. Bind mount degil — Windows'ta
 # dosya izni/performans derdi cikarmaz.
 volumes:
