@@ -176,7 +176,7 @@ public class AuthEndpointsTests(PostgresFixture fixture) : IAsyncLifetime
     {
         // Seed calisti mi? Admin gercekten giris yapabiliyor mu?
         var login = await _client.PostAsJsonAsync("/api/auth/login",
-            new { email = "admin@smartlogistics.local", password = "Admin1234" },
+            new { email = "admin@smartlogistics.local", password = AuthApiFactory.TestAdminPassword },
             TestContext.Current.CancellationToken);
 
         login.StatusCode.Should().Be(HttpStatusCode.OK);

@@ -11,6 +11,11 @@ namespace SmartLogistics.AuthService.IntegrationTests.Fixtures;
 // Testcontainers'in kaldirdigi gecici veritabanina yazsin.
 public sealed class AuthApiFactory(string connectionString) : WebApplicationFactory<Program>
 {
+    // Bu sabitler APACIK SAHTEDIR ve sadece testin kaldirdigi gecici
+    // veritabaninda gecerlidir. Gercek ortam degerleriyle ayni OLMAMALI:
+    // gercek sifreler .env'de durur ve git'e girmez.
+    public const string TestAdminPassword = "integration-test-only-Admin1";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // Development: uygulama acilista migration + seed calistiriyor.
@@ -23,7 +28,7 @@ public sealed class AuthApiFactory(string connectionString) : WebApplicationFact
         builder.UseSetting("Jwt:Audience", "smart-logistics-test-clients");
         builder.UseSetting("Jwt:ExpiryMinutes", "60");
 
-        builder.UseSetting("Seed:AdminPassword", "Admin1234");
-        builder.UseSetting("Seed:DefaultPassword", "Demo1234");
+        builder.UseSetting("Seed:AdminPassword", TestAdminPassword);
+        builder.UseSetting("Seed:DefaultPassword", "integration-test-only-Default1");
     }
 }
