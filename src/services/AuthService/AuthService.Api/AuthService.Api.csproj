@@ -8,6 +8,10 @@
     <!-- /health/ready endpoint'inin Postgres'e gercekten baglanabilmesi icin. -->
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+
+    <!-- Sadece "dotnet ef migrations" komutunun calisabilmesi icin.
+         PrivateAssets=all: calisma zamanina ve bagimli projelere tasinmaz. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

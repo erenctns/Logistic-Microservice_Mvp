@@ -54,10 +54,53 @@
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
   </ItemGroup>
 
+  <!-- CQRS hatti -->
+  <ItemGroup>
+    <!-- MediatR 12.5.0: Apache-2.0 olan SON surum. v13'ten itibaren ticari
+         lisansa gecti ve community kullanimi bile anahtar kaydi istiyor.
+         Kullandigimiz yuzey (IRequest, IRequestHandler, IPipelineBehavior)
+         v14 ile neredeyse birebir ayni; anahtar derdine girmeye degmez. -->
+    <PackageVersion Include="MediatR" Version="12.5.0" />
+
+    <!-- Dogrulama kurallari handler'in icine degil, ayri validator siniflarina. -->
+    <PackageVersion Include="FluentValidation" Version="12.1.1" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+  </ItemGroup>
+
+  <!-- Auth Service: kimlik dogrulama ve kaliciik -->
+  <ItemGroup>
+    <!-- Sifre hash'leme (PBKDF2), rol yonetimi, kullanici store'u.
+         Elle yazmak guvenlik acigi uretmenin en kisa yoludur. -->
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
+
+    <!-- EF Core'un PostgreSQL saglayicisi. -->
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+
+    <!-- Identity tablolari PascalCase gelir (AspNetUsers); konvansiyonumuz
+         snake_case. Bu paket tek satirla cevirir: asp_net_users. -->
+    <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
+
+    <!-- Sadece "dotnet ef migrations" komutu icin; calisma zamaninda kullanilmaz. -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+
+    <!-- Gelen istekteki JWT'yi dogrular (imza, issuer, sure). -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+
+    <!-- Token URETIMI. JwtSecurityTokenHandler'in yerini alan guncel API. -->
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.22.0" />
+
+    <!-- IConfiguration'i tipli nesneye baglar: configuration["Jwt:Key"] yerine JwtOptions. -->
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.12" />
+  </ItemGroup>
+
   <!-- Integration test altyapisi -->
   <ItemGroup>
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
     <PackageVersion Include="Respawn" Version="7.0.0" />
+
+    <!-- WebApplicationFactory: uygulamayi bellekte ayaga kaldirip gercek
+         HTTP istegi atmayi saglar (port dinlemeden, tam pipeline ile). -->
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
     <PackageVersion Include="Npgsql" Version="10.0.3" />
   </ItemGroup>
 

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="AwesomeAssertions" />
+    <!-- Handler testlerinde IIdentityService'in sahtesi icin. Moq degil:
+         SponsorLink olayindan sonra ekosistem NSubstitute'a kaydi (ADR-005). -->
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/services/AuthService/AuthService.Application/AuthService.Application.csproj" />
+    <ProjectReference Include="../../src/services/AuthService/AuthService.Infrastructure/AuthService.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

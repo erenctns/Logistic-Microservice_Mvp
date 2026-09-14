@@ -102,6 +102,14 @@ services:
       # "__" ile yazilir (Linux env adinda ":" gecersiz).
       # Sir appsettings.json'da DEGIL, .env'den geliyor.
       ConnectionStrings__AuthDb: "Host=${POSTGRES_HOST};Port=5432;Database=${AUTH_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      # JWT ayarlari da ayni yoldan: sir .env'de, koda gomulu degil.
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__ExpiryMinutes: ${JWT_EXPIRY_MINUTES}
+      # Seed kullanicilarinin sifreleri de koda gomulu degil.
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD}
+      Seed__DefaultPassword: ${SEED_DEFAULT_PASSWORD}
     ports:
       # Disaridan 8081, container icinde 8080 (ASP.NET 8+ varsayilani).
       - "${AUTH_SERVICE_PORT}:8080"
