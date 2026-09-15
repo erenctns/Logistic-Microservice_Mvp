@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using SmartLogistics.AuthService.Application.Common.Interfaces;
+using SmartLogistics.BuildingBlocks.Infrastructure.Authentication;
 
 namespace SmartLogistics.AuthService.Infrastructure.Authentication;
 
@@ -16,9 +17,6 @@ namespace SmartLogistics.AuthService.Infrastructure.Authentication;
 // sormadan, imzayi dogrulayip icindeki role bakarak karar verir.
 public sealed class JwtTokenGenerator(JwtOptions options) : IJwtTokenGenerator
 {
-    // Dogrulama tarafi ayni adi kullanmali (TokenValidationParameters.RoleClaimType).
-    public const string RoleClaimName = "role";
-
     public AccessToken Generate(
         Guid userId,
         string email,
@@ -39,7 +37,7 @@ public sealed class JwtTokenGenerator(JwtOptions options) : IJwtTokenGenerator
 
         // Rol claim'leri: [Authorize(Roles = "Admin")] bunlara bakar.
         // ClaimTypes.Role uzun bir schemas.microsoft.com URI'si uretir; kisa ad okunur kalir.
-        claims.AddRange(roles.Select(role => new Claim(RoleClaimName, role)));
+        claims.AddRange(roles.Select(role => new Claim(JwtClaimNames.Role, role)));
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Key));
 

@@ -1,8 +1,8 @@
 # ==========================================================
-#  Auth Service — multi-stage build
+#  Order Service — multi-stage build
 #
 #  ONEMLI: build context REPO KOKUDUR, bu klasor degil:
-#     docker build -f src/services/AuthService/AuthService.Api/Dockerfile .
+#     docker build -f src/services/OrderService/OrderService.Api/Dockerfile .
 #  Cunku servis src/BuildingBlocks/* projelerine referans veriyor ve
 #  Docker, context disindaki dosyayi kopyalayamaz.
 # ==========================================================
@@ -18,18 +18,18 @@ COPY global.json Directory.Build.props Directory.Packages.props ./
 COPY src/BuildingBlocks/BuildingBlocks.Domain/BuildingBlocks.Domain.csproj                 src/BuildingBlocks/BuildingBlocks.Domain/
 COPY src/BuildingBlocks/BuildingBlocks.Application/BuildingBlocks.Application.csproj       src/BuildingBlocks/BuildingBlocks.Application/
 COPY src/BuildingBlocks/BuildingBlocks.Infrastructure/BuildingBlocks.Infrastructure.csproj src/BuildingBlocks/BuildingBlocks.Infrastructure/
-COPY src/Contracts/Contracts.csproj                                                         src/Contracts/
-COPY src/services/AuthService/AuthService.Domain/AuthService.Domain.csproj                 src/services/AuthService/AuthService.Domain/
-COPY src/services/AuthService/AuthService.Application/AuthService.Application.csproj       src/services/AuthService/AuthService.Application/
-COPY src/services/AuthService/AuthService.Infrastructure/AuthService.Infrastructure.csproj src/services/AuthService/AuthService.Infrastructure/
-COPY src/services/AuthService/AuthService.Api/AuthService.Api.csproj                       src/services/AuthService/AuthService.Api/
+COPY src/Contracts/Contracts.csproj                                                           src/Contracts/
+COPY src/services/OrderService/OrderService.Domain/OrderService.Domain.csproj                 src/services/OrderService/OrderService.Domain/
+COPY src/services/OrderService/OrderService.Application/OrderService.Application.csproj       src/services/OrderService/OrderService.Application/
+COPY src/services/OrderService/OrderService.Infrastructure/OrderService.Infrastructure.csproj src/services/OrderService/OrderService.Infrastructure/
+COPY src/services/OrderService/OrderService.Api/OrderService.Api.csproj                       src/services/OrderService/OrderService.Api/
 
-RUN dotnet restore src/services/AuthService/AuthService.Api/AuthService.Api.csproj
+RUN dotnet restore src/services/OrderService/OrderService.Api/OrderService.Api.csproj
 
 # Simdi kaynak kod. Bu satirdan sonrasi her kod degisikliginde yeniden calisir.
 COPY src/ src/
 
-RUN dotnet publish src/services/AuthService/AuthService.Api/AuthService.Api.csproj \
+RUN dotnet publish src/services/OrderService/OrderService.Api/OrderService.Api.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish
@@ -53,4 +53,4 @@ USER $APP_UID
 # ASP.NET 8+ imajlari varsayilan olarak 8080 dinler (eskiden 80'di).
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "SmartLogistics.AuthService.Api.dll"]
+ENTRYPOINT ["dotnet", "SmartLogistics.OrderService.Api.dll"]

@@ -74,6 +74,10 @@
     <PackageVersion Include="MassTransit" Version="8.5.10" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.10" />
 
+    <!-- Outbox: event'i is verisiyle AYNI transaction'da veritabanina yazar.
+         inbox_state / outbox_message / outbox_state tablolarini bu paket getirir. -->
+    <PackageVersion Include="MassTransit.EntityFrameworkCore" Version="8.5.10" />
+
     <!-- Testlerde bus'i elle kurabilmek icin (uygulama kodunda gerekmiyor:
          ASP.NET host'u bunlari zaten getiriyor). -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />

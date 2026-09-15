@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using AwesomeAssertions;
 using SmartLogistics.AuthService.Infrastructure.Authentication;
+using SmartLogistics.BuildingBlocks.Infrastructure.Authentication;
 
 namespace SmartLogistics.AuthService.UnitTests.Auth;
 
@@ -46,7 +47,7 @@ public class JwtTokenGeneratorTests
             Guid.NewGuid(), "admin@example.com", "Admin", ["Admin", "Customer"]);
 
         var roles = Read(token.Value).Claims
-            .Where(claim => claim.Type == JwtTokenGenerator.RoleClaimName)
+            .Where(claim => claim.Type == JwtClaimNames.Role)
             .Select(claim => claim.Value);
 
         roles.Should().BeEquivalentTo(["Admin", "Customer"]);

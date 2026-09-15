@@ -124,6 +124,47 @@ services:
     networks:
       - logistics-net
 
+  # ---------------------------------------------------------
+  #  Order Service — sablonun ikinci kopyasi
+  #  Auth'tan farki: kendi database'i, kendi portu ve
+  #  RabbitMQ'ya baglanmasi (event yayinlayacak).
+  # ---------------------------------------------------------
+  order-service:
+    build:
+      context: .
+      dockerfile: src/services/OrderService/OrderService.Api/Dockerfile
+    container_name: sl-order
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        # Event yayinlayacagi icin broker'in da hazir olmasini bekler.
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__OrderDb: "Host=${POSTGRES_HOST};Port=5432;Database=${ORDER_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      # AYNI Jwt anahtari: Auth'un urettigi token'i bu servis dogrulayabilsin diye.
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__ExpiryMinutes: ${JWT_EXPIRY_MINUTES}
+      RabbitMq__Host: ${RABBITMQ_HOST}
+      RabbitMq__Port: ${RABBITMQ_PORT}
+      RabbitMq__Username: ${RABBITMQ_USERNAME}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__VirtualHost: ${RABBITMQ_VHOST}
+    ports:
+      - "${ORDER_SERVICE_PORT}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - logistics-net
+
 # Named volume: Docker yonetir. Bind mount degil — Windows'ta
 # dosya izni/performans derdi cikarmaz.
 volumes:

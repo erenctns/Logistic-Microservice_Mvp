@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using SmartLogistics.AuthService.Domain;
+using SmartLogistics.Contracts;
 using SmartLogistics.AuthService.Infrastructure.Identity;
 
 namespace SmartLogistics.AuthService.Infrastructure.Persistence;

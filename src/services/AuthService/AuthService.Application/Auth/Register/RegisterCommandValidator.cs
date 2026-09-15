@@ -1,5 +1,5 @@
 using FluentValidation;
-using SmartLogistics.AuthService.Domain;
+using SmartLogistics.Contracts;
 
 namespace SmartLogistics.AuthService.Application.Auth.Register;
 

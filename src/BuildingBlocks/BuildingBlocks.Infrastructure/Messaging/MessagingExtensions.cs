@@ -10,7 +10,7 @@ namespace SmartLogistics.BuildingBlocks.Infrastructure.Messaging;
 // isimlendirme kurallari burada, tek yerde durur.
 public static class MessagingExtensions
 {
-    public static IServiceCollection AddEventBus(
+    public static IServiceCollection AddEventBus( //burası bağlantıyı kurma işlemlerini felan yapıcak
         this IServiceCollection services,
         IConfiguration configuration,
         Action<IBusRegistrationConfigurator>? configure = null)

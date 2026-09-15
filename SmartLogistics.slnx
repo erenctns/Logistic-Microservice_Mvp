@@ -14,11 +14,19 @@
     <Project Path="src/services/AuthService/AuthService.Domain/AuthService.Domain.csproj" />
     <Project Path="src/services/AuthService/AuthService.Infrastructure/AuthService.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/services/OrderService/">
+    <Project Path="src/services/OrderService/OrderService.Api/OrderService.Api.csproj" />
+    <Project Path="src/services/OrderService/OrderService.Application/OrderService.Application.csproj" />
+    <Project Path="src/services/OrderService/OrderService.Domain/OrderService.Domain.csproj" />
+    <Project Path="src/services/OrderService/OrderService.Infrastructure/OrderService.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AuthService.IntegrationTests/AuthService.IntegrationTests.csproj" />
     <Project Path="tests/AuthService.UnitTests/AuthService.UnitTests.csproj" />
     <Project Path="tests/BuildingBlocks.IntegrationTests/BuildingBlocks.IntegrationTests.csproj" />
     <Project Path="tests/BuildingBlocks.UnitTests/BuildingBlocks.UnitTests.csproj" />
+    <Project Path="tests/OrderService.IntegrationTests/OrderService.IntegrationTests.csproj" />
+    <Project Path="tests/OrderService.UnitTests/OrderService.UnitTests.csproj" />
     <Project Path="tests/TestSupport/TestSupport.csproj" />
   </Folder>
 </Solution>
