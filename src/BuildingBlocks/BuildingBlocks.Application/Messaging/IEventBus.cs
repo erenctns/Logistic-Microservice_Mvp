@@ -1,24 +1,20 @@
 namespace SmartLogistics.BuildingBlocks.Application.Messaging;
 
-// "Event'i disariya duyur" sozlesmesi. SADECE sozlesme — RabbitMQ kelimesi
-// bu katmanda hic gecmez.
+// "Event'i disariya duyur" sozlesmesi. SADECE sozlesme — MassTransit veya
+// RabbitMQ kelimesi bu katmanda hic gecmez.
 //
-// Implementasyonu (RabbitMqEventBus) Step 06'da Infrastructure'a yazilacak.
-// Buna dependency inversion denir: ust katman somut teknolojiyi degil soyut
-// sozlesmeyi tanir. Yarin RabbitMQ yerine Kafka gelirse Application ve Domain
-// katmanlarinda tek satir degismez.
+// MassTransit'in kendi IPublishEndpoint arayuzunu dogrudan kullanabilirdik;
+// kullanmiyoruz cunku o zaman Application katmani bir NuGet paketine bagimli
+// olurdu. Mimari kural: interface Application'da TANIMLANIR, implementasyon
+// Infrastructure'da yazilir. Bedeli 10 satirlik bir sarmalayici.
+//
+// PUBLISH vs SEND ayrimi:
+//   Publish -> EVENT. "Siparis olustu." Kimin dinledigini gonderen bilmez,
+//              dinleyen herkes bir kopya alir. Bizim kullandigimiz bu.
+//   Send    -> KOMUT. "Su siparisi olustur." Tek bir kuyruga, belirli bir
+//              alicaya gider. Servisler arasi komut gondermiyoruz.
 public interface IEventBus
 {
-    // eventType : "OrderCreated" — routing key bundan uretilir (order.created)
-    //             ve consumer mesaji hangi tipe cozecegini bundan bilir.
-    // payload   : event'in JSON hali. Neden object degil string? Cunku outbox
-    //             tablosunda zaten JSON olarak duruyor; nesneye cozup tekrar
-    //             serialize etmek bos masraf ve veri kaybi riski.
-    // messageId : outbox satirinin id'si. Consumer ayni mesaji ikinci kez
-    //             gorurse bu id ile anlayip atlayacak (idempotency, Step 08).
-    Task PublishAsync(
-        string eventType,
-        string payload,
-        Guid messageId,
-        CancellationToken cancellationToken = default);
+    Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+        where TEvent : class;
 }

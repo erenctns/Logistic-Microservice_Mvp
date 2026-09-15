@@ -1,8 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk"><!-- En disttaki katman: Application'daki sozlesmeleri IMPLEMENT eder.
-       Teknoloji paketleri (EF Core, RabbitMQ.Client) buraya gelecek. -->
+<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- En disttaki katman: Application'daki sozlesmeleri IMPLEMENT eder.
+       Teknoloji paketleri buraya gelir. -->
 
   <ItemGroup>
-    <ProjectReference Include="..\BuildingBlocks.Application\BuildingBlocks.Application.csproj" />
+    <PackageReference Include="MassTransit" />
+    <PackageReference Include="MassTransit.RabbitMQ" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../BuildingBlocks.Application/BuildingBlocks.Application.csproj" />
+  </ItemGroup>
+
 </Project>

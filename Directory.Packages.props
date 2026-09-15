@@ -67,6 +67,20 @@
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
   </ItemGroup>
 
+  <!-- Messaging: MassTransit v8 (ADR-008) -->
+  <ItemGroup>
+    <!-- 8.5.10: v8 hattinin son surumu, Apache-2.0.
+         v9 ticari lisansa gecti; MediatR'da oldugu gibi son acik surumde kaliyoruz. -->
+    <PackageVersion Include="MassTransit" Version="8.5.10" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.10" />
+
+    <!-- Testlerde bus'i elle kurabilmek icin (uygulama kodunda gerekmiyor:
+         ASP.NET host'u bunlari zaten getiriyor). -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.12" />
+  </ItemGroup>
+
   <!-- Auth Service: kimlik dogrulama ve kaliciik -->
   <ItemGroup>
     <!-- Sifre hash'leme (PBKDF2), rol yonetimi, kullanici store'u.
@@ -96,6 +110,7 @@
   <!-- Integration test altyapisi -->
   <ItemGroup>
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
+    <PackageVersion Include="Testcontainers.RabbitMq" Version="4.15.0" />
     <PackageVersion Include="Respawn" Version="7.0.0" />
 
     <!-- WebApplicationFactory: uygulamayi bellekte ayaga kaldirip gercek

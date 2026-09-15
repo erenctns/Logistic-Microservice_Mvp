@@ -13,10 +13,18 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Npgsql" />
+
+    <!-- Testte bus'i elle kurmak icin: DI kabi, konfigurasyon, loglama.
+         Uygulamada bunlari ASP.NET host'u zaten getiriyor. -->
+    <PackageReference Include="MassTransit" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../TestSupport/TestSupport.csproj" />
+    <ProjectReference Include="../../src/BuildingBlocks/BuildingBlocks.Infrastructure/BuildingBlocks.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

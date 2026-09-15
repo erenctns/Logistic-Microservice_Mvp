@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Servisler ARASI sozlesmeler. Publisher ve consumer AYNI CLR tipini
+       paylasmak zorunda oldugu icin ayri bir projede yasiyorlar.
+
+       MIMARI KURAL: burada ASLA <PackageReference> olmayacak.
+       Bir event sozlesmesi saf veridir; MassTransit'i, EF Core'u veya
+       baska bir teknolojiyi tanimamali. Yarin bus degisse bu proje
+       aynen kalir. -->
+
+</Project>
