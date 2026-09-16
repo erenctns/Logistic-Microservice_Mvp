@@ -8,30 +8,16 @@
 
 **Event-driven mikroservis mimarisini öğrenmek ve anlatmak için yazılmış bir referans proje.**
 
-Bir müşteri sipariş verir; **hiç kimse elle tetiklemeden** saniyeler içinde bir gönderi ve takip numarası oluşur. Arada HTTP çağrısı yoktur — sadece bir event.
+Müşteri sipariş verir; **kimse elle tetiklemeden** saniyeler içinde bir gönderi ve takip
+numarası oluşur. Arada HTTP çağrısı yok — sadece bir event.
 
-Bu depo bir ürün değil. Amacı, dağıtık sistemlerin *gerçekten zor* olan kısımlarını —
-**mesaj kaybolmaması**, **aynı mesajın iki kez işlenmemesi**, **servislerin birbirini
-tanımaması** — çalışan, denenebilir, test edilmiş bir örnek üzerinden göstermek.
-
----
-
-## 📑 İçindekiler
-
-| | |
-|---|---|
-| [Mimari — kuşbakışı](#-mimari--kuşbakışı) | Sistem tek bakışta |
-| [Senaryo: bir siparişin yolculuğu](#-senaryo-bir-siparişin-yolculuğu) | Adım adım tüm akış |
-| [Neden tek PostgreSQL?](#-neden-tek-postgresql-database-per-service) | Mantıksal vs fiziksel sınır |
-| [Ortak projeler](#-ortak-projeler-contracts-ve-buildingblocks) | Contracts ve BuildingBlocks |
-| [Bir servisin iç yapısı](#-bir-servisin-iç-yapısı) | Katmanlar ve bağımlılık yönü |
-| [İki zor problem](#-dağıtık-sistemin-iki-zor-problemi) | Outbox ve Inbox |
-| [Çalıştır](#-çalıştır) | 3 komut |
-| [Kendi gözünle gör](#-kendi-gözünle-gör) | Deneyler |
+Amaç, dağıtık sistemlerin *gerçekten zor* kısımlarını — **mesaj kaybolmaması**, **aynı
+mesajın iki kez işlenmemesi**, **servislerin birbirini tanımaması** — çalışan ve test
+edilmiş bir örnek üzerinden göstermek.
 
 ---
 
-## 🗺️ Mimari — kuşbakışı
+## 🗺️ Mimari
 
 ```mermaid
 flowchart LR
@@ -41,7 +27,7 @@ flowchart LR
     Order["📦 <b>Order Service</b><br/>:8082"]
     Ship["🚚 <b>Shipment Service</b><br/>:8083"]
 
-    Rabbit{{"🐇 <b>RabbitMQ</b><br/>event broker"}}
+    Rabbit{{"🐇 <b>RabbitMQ</b>"}}
 
     AuthDB[("🗄️ auth_db")]
     OrderDB[("🗄️ order_db")]
@@ -60,7 +46,7 @@ flowchart LR
     Order --- OrderDB
     Ship --- ShipDB
 
-    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff,rx:6,ry:6
+    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff
     classDef db fill:#0d1117,stroke:#30363d,color:#c9d1d9
     classDef broker fill:#ff6600,stroke:#b34700,color:#fff
     class Auth,Order,Ship svc
@@ -68,24 +54,19 @@ flowchart LR
     class Rabbit broker
 ```
 
-### Değişmez üç kural
-
-| Kural | Sonucu |
+| Değişmez kural | Sonucu |
 |---|---|
-| Servisler **birbirini HTTP ile çağırmaz** | Biri çökerse diğeri çalışmaya devam eder |
+| Servisler **birbirini HTTP ile çağırmaz** | Biri çökerse diğeri çalışır |
 | Servisler **birbirinin veritabanına dokunmaz** | Şema değişikliği komşuyu kırmaz |
-| Aralarındaki tek yol **event'ler** | Yeni servis eklemek mevcut kodu değiştirmez |
+| Aralarındaki tek yol **event'ler** | Yeni servis mevcut kodu değiştirmez |
 
-> **Order Service, Shipment Service'in var olduğunu bilmiyor.** Kodunda `Shipment`
-> kelimesi hiç geçmiyor. Sadece "sipariş oluştu" diye bağırıyor; kimin duyduğu
-> onu ilgilendirmiyor. Buna **gevşek bağlılık (loose coupling)** deniyor ve bu
-> projenin tamamı bu tek fikrin üzerine kurulu.
+> **Order Service, Shipment Service'in var olduğunu bilmiyor** — kodunda `Shipment`
+> kelimesi hiç geçmiyor. Sadece "sipariş oluştu" diye bağırıyor; kimin duyduğu onu
+> ilgilendirmiyor. Projenin tamamı bu tek fikrin üzerine kurulu.
 
 ---
 
-## 🎬 Senaryo: bir siparişin yolculuğu
-
-Aşağıdaki akış **gerçekte çalışan** akıştır — uydurma değil, entegrasyon testleriyle doğrulanmıştır.
+## 🎬 Bir siparişin yolculuğu
 
 ```mermaid
 sequenceDiagram
@@ -100,211 +81,120 @@ sequenceDiagram
 
     M->>A: POST /api/auth/login
     A-->>M: JWT (rol: Customer)
-    Note over A,M: Token imzalı. Diğer servisler<br/>onu Auth'a sormadan doğrular.
 
     M->>O: POST /api/orders + JWT
-    Note over O: customerId token'ın "sub" claim'inden alınır —<br/>istemcinin gönderdiğine ASLA güvenilmez
+    Note over O: customerId token'ın "sub" claim'inden —<br/>istemcinin gönderdiğine güvenilmez
 
     rect rgb(210, 235, 255)
     Note over O,ODB: ⚛️ TEK TRANSACTION
     O->>ODB: INSERT orders
-    O->>ODB: INSERT outbox_message (OrderCreated)
+    O->>ODB: INSERT outbox_message
     end
 
-    O-->>M: 201 Created { orderId }
-    Note over M,O: Müşteri burada bekletilmedi.<br/>RabbitMQ çökük olsa bile 201 döner.
+    O-->>M: 201 Created
+    Note over M,O: Müşteri beklemedi.<br/>RabbitMQ çökük olsa bile 201 döner.
 
     O->>R: arka plan servisi outbox'ı süpürür
     ODB->>ODB: outbox satırı silinir
-
     R->>S: order-created kuyruğu
 
     rect rgb(255, 235, 210)
     Note over S,SDB: 🛡️ inbox kontrolü + TEK TRANSACTION
-    S->>SDB: bu message_id daha önce işlendi mi?
+    S->>SDB: bu message_id işlendi mi?
     S->>SDB: INSERT inbox_state
     S->>SDB: INSERT shipments (TR-2026-00001)
-    S->>SDB: INSERT outbox_message (ShipmentCreated)
+    S->>SDB: INSERT outbox_message
     end
 
-    S->>R: ShipmentCreated yayınlanır
-
+    S->>R: ShipmentCreated
     M->>S: GET /api/shipments/by-order/{id}
-    S-->>M: { trackingNumber: "TR-2026-00001" }
+    S-->>M: trackingNumber: TR-2026-00001
 ```
 
-### Ne oldu, sırasıyla
+Üç kritik nokta:
 
-1. **Giriş** — Auth Service kimliği doğrular, imzalı bir JWT verir.
-2. **Sipariş** — Order Service token'ı **kendi** doğrular. Auth'a hiç istek atmaz; imza matematiksel olarak doğrulanabilir.
-3. **Atomik yazma** — Sipariş satırı ve "sipariş oluştu" event'i **aynı transaction'da** yazılır. İkisi ya birlikte olur ya hiç.
-4. **Cevap** — Müşteri 201 alır ve yoluna devam eder. Gönderinin oluşmasını beklemez.
-5. **Yayın** — Arka plan servisi event'i RabbitMQ'ya taşır ve veritabanındaki satırı siler.
-6. **Tüketim** — Shipment Service mesajı alır, daha önce işleyip işlemediğini kontrol eder, gönderi oluşturur ve kendi event'ini yayınlar.
-7. **Sorgu** — Müşteri gönderisini takip numarasıyla sorgular.
-
-> **Adım 4 kritik:** Müşteri, gönderinin oluşmasını beklemiyor. Bu **asenkron** olmanın
-> karşılığı: sistemin bir parçası yavaşsa ya da çökükse, kullanıcı bunu görmez.
-> Bedeli ise **eventual consistency** — gönderi 1 saniye sonra oluşur, hemen değil.
+- **Token'ı Order kendi doğrular** — Auth'a istek atmaz, imza matematiksel olarak doğrulanabilir.
+- **Müşteri 201 alıp gider** — gönderinin oluşmasını beklemez. Bedeli *eventual consistency*: gönderi ~1 saniye sonra oluşur.
+- **Her iki yazma da tek transaction** — yarım durum imkânsız.
 
 ---
 
-## 🗄️ Neden tek PostgreSQL? (database-per-service)
+## 🗄️ Neden tek PostgreSQL?
 
-Tek bir PostgreSQL **container'ı** var ama içinde **üç ayrı veritabanı**:
+Tek container, **üç ayrı veritabanı**. Her servis **yalnızca kendi connection string'ini**
+biliyor; `shipment_db` diye bir ayarı yok, dolayısıyla oraya bakamaz.
 
 ```mermaid
-flowchart TB
-    subgraph PG["🐘 postgres container (:5432)"]
-        direction LR
-        A[("auth_db<br/>users · roles")]
-        O[("order_db<br/>orders · outbox_message")]
-        S[("shipment_db<br/>shipments · inbox_state · outbox_message")]
-    end
-
-    AS["🔑 Auth Service"] -->|"ConnectionStrings__AuthDb"| A
-    OS["📦 Order Service"] -->|"ConnectionStrings__OrderDb"| O
-    SS["🚚 Shipment Service"] -->|"ConnectionStrings__ShipmentDb"| S
-
+flowchart LR
+    AS["🔑 Auth"] -->|"ConnectionStrings__AuthDb"| A[("auth_db")]
+    OS["📦 Order"] -->|"ConnectionStrings__OrderDb"| O[("order_db")]
+    SS["🚚 Shipment"] -->|"ConnectionStrings__ShipmentDb"| S[("shipment_db")]
     AS -.->|"❌ erişemez"| O
     SS -.->|"❌ erişemez"| O
 
-    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff,rx:6,ry:6
+    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff
     classDef db fill:#0d1117,stroke:#30363d,color:#c9d1d9
     class AS,OS,SS svc
     class A,O,S db
 ```
 
-### Asıl sınır fiziksel değil, mantıksal
+**Asıl sınır fiziksel değil, mantıksal.** Aynı sunucuda olmaları "bir servis diğerinin
+tablosuna `JOIN` atar" kazasını mümkün kılmıyor — çünkü ayarı yok.
 
-Her servis **yalnızca kendi connection string'ini** biliyor. Order Service'in kodunda
-`shipment_db` diye bir şey geçmez; geçemez de — böyle bir ayarı yok.
-
-Bu, "bir servis diğerinin tablosuna `JOIN` atar" kazasını **yapısal olarak** imkansız kılar.
-Aynı fiziksel sunucuda olmaları bunu değiştirmez.
-
-### Üretimde ne değişir? — sadece bir satır
-
-Her veritabanını ayrı bir sunucuya taşımak için **tek satır kod değişmez**:
+Üretimde ayırmak için **tek satır kod değişmez**:
 
 ```yaml
-# Local (docker-compose.yml)
+# Local
 ConnectionStrings__OrderDb: "Host=postgres;Database=order_db;..."
-
-# Üretim — sadece ortam değişkeni değişir
+# Üretim — sadece ortam değişkeni
 ConnectionStrings__OrderDb: "Host=order-db.prod.internal;Database=orders;..."
 ```
 
-Her servisin ayarı bağımsız olduğu için taşıma da **tek tek** yapılabilir: önce Order'ı
-ayır, sonra Shipment'ı. Hepsi aynı anda taşınmak zorunda değil.
-
-| | Local (bu depo) | Üretim |
-|---|---|---|
-| Container sayısı | 1 | 3 (ya da 3 managed instance) |
-| Veritabanı sayısı | 3 | 3 |
-| Servis kodu | — | **değişmez** |
-| Değişen | — | 3 connection string |
-
-> Tek container tercihi bilinçli bir **local kolaylık**: daha az RAM, daha hızlı açılış,
-> tek healthcheck. Mimari sınır zaten connection string seviyesinde çizilmiş durumda.
+Her servisin ayarı bağımsız olduğu için taşıma **tek tek** yapılabilir.
+Tek container bilinçli bir local kolaylık: az RAM, hızlı açılış, tek healthcheck.
 
 ---
 
-## 🧩 Ortak projeler: Contracts ve BuildingBlocks
+## 🧩 Ortak projeler
 
-Üç servisin de referans verdiği iki proje var. **İkisi çok farklı şeyler** ve bu ayrımı
-anlamak mikroservis mimarisinin en sık karıştırılan noktalarından biri.
+Üç servisin de referans verdiği iki proje var — ve **çok farklı şeyler**.
 
-```mermaid
-flowchart TB
-    subgraph SHARED["Ortak projeler"]
-        direction LR
-        C["📜 <b>Contracts</b><br/>sıfır bağımlılık<br/><br/>OrderCreated<br/>ShipmentCreated<br/>Roles"]
-        B["🧱 <b>BuildingBlocks</b><br/>teknik altyapı<br/><br/>Result&lt;T&gt; · BaseEntity<br/>IEventBus · JWT kurulumu<br/>MassTransit kurulumu"]
-    end
-
-    A["🔑 Auth"] --> C
-    A --> B
-    O["📦 Order"] --> C
-    O --> B
-    S["🚚 Shipment"] --> C
-    S --> B
-
-    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff,rx:6,ry:6
-    classDef shared fill:#8957e5,stroke:#6639ba,color:#fff,rx:6,ry:6
-    class A,O,S svc
-    class C,B shared
-```
-
-### 📜 Contracts — "ne konuşuyoruz"
-
-Servisler arasında taşınan **mesajların şekli**. Sadece veri; metot yok, iş kuralı yok.
-
-```csharp
-public sealed record OrderCreated(
-    Guid OrderId, Guid CustomerId, string DeliveryAddress,
-    string PackageSize, DateTime CreatedAt);
-```
-
-**Neden ayrı bir proje?** Order yayınlıyor, Shipment dinliyor — **ikisi de aynı C# tipini**
-referans ediyor. Ayrı olmasaydı Shipment'ın, Order'ın iç katmanlarına referans vermesi
-gerekirdi. O an mikroservis olmaktan çıkar, tek uygulama oluruz.
-
-**Neden sıfır bağımlılığı var?** Sözleşme, yayıncının iç tiplerine bağlanmamalı.
-`PackageSize` burada `enum` değil `string` — çünkü o enum Order Service'e ait.
-
-> ⚠️ Bir alanı **silmek veya adını değiştirmek** breaking change'dir. Yeni alan eklemek
-> güvenlidir. Hatta namespace'i değiştirmek bile kırıcıdır: RabbitMQ exchange adı
-> `namespace + tip adı`ndan türetilir.
-
-### 🧱 BuildingBlocks — "nasıl yazıyoruz"
-
-Her servisin tekrar tekrar yazacağı **teknik** kod. **İş mantığı asla girmez.**
-
-| Katman | İçerik |
-|---|---|
-| `BuildingBlocks.Domain` | `Result<T>`, `Error`, `BaseEntity` — **sıfır NuGet paketi** |
-| `BuildingBlocks.Application` | `IEventBus` — sadece soyut sözleşme |
-| `BuildingBlocks.Infrastructure` | MassTransit kurulumu, JWT doğrulama, RabbitMQ ayarları |
-
-Üç servis × aynı JWT kurulumu = üç kopya, ve o üç kopyadan biri farklı kalınca
-bulunması çok zor bir hata. Ortak yer bunu engelliyor.
-
-### İkisinin farkı tek tabloda
-
-| | 📜 Contracts | 🧱 BuildingBlocks |
+| | 📜 **Contracts** | 🧱 **BuildingBlocks** |
 |---|---|---|
 | Ne paylaşır | **Sözleşme** — veri şekli | **Altyapı** — teknik kod |
-| Kime bakar | Dışarıya: başkasının okuyacağı şey | İçeriye: kendi işimi kolaylaştıran şey |
+| Kime bakar | Dışarıya: başkasının okuyacağı şey | İçeriye: kendi işimi kolaylaştıran |
 | Değişirse | **Diğer servisler kırılır** | Kendi kodumu derlerim |
-| Örnek | `OrderCreated` | `Result<T>` |
+| İçerik | `OrderCreated`, `ShipmentCreated`, `Roles` | `Result<T>`, `BaseEntity`, `IEventBus`, JWT + MassTransit kurulumu |
+| Bağımlılık | **Sıfır** | Sadece teknik paketler |
+
+**Contracts neden ayrı?** Order yayınlıyor, Shipment dinliyor — **ikisi de aynı C# tipini**
+referans ediyor. Ayrı olmasaydı Shipment'ın, Order'ın iç katmanlarına referans vermesi
+gerekirdi; o an tek uygulama oluruz.
+
+**BuildingBlocks neden var?** Üç servis × aynı JWT kurulumu = üç kopya, ve o üç kopyadan
+biri farklı kalınca bulunması çok zor bir hata. **İş mantığı asla girmez.**
+
+> ⚠️ Contracts'ta bir alanı **silmek veya adını değiştirmek** breaking change'dir; yeni
+> alan eklemek güvenlidir. Namespace değiştirmek bile kırıcıdır — RabbitMQ exchange adı
+> `namespace + tip adı`ndan türetilir.
 
 ### 🔮 Gerçek hayatta: NuGet paketi
 
-Bu depoda ikisi de **proje referansı** olarak duruyor — tek repo, tek `dotnet build`,
-öğrenmek için en kolay hâli.
-
-Gerçek bir şirkette bunlar **özel bir NuGet beslemesine** (Azure Artifacts, GitHub
-Packages, Nexus) yayınlanır:
+Bu depoda ikisi de proje referansı — öğrenmek için en kolay hâli. Gerçek bir şirkette
+özel bir NuGet beslemesine yayınlanır:
 
 ```xml
 <PackageReference Include="Logistics.Contracts" Version="2.1.0" />
-<PackageReference Include="Logistics.BuildingBlocks" Version="4.0.2" />
 ```
-
-**Bu neden bir bağımlılık sorunu değil?**
 
 ```mermaid
 flowchart LR
     subgraph BAD["❌ Gerçek bağımlılık"]
-        direction TB
-        S1["Shipment Service"] -->|"referans"| O1["Order Service<br/>iç kodu"]
+        S1["Shipment"] -->|"referans"| O1["Order'ın<br/>iç kodu"]
     end
-
     subgraph GOOD["✅ Sürümlenmiş paket"]
-        direction TB
-        S2["Shipment Service"] -->|"v2.1.0"| P["📦 Contracts<br/>NuGet"]
-        O2["Order Service"] -->|"v2.0.0"| P
+        S2["Shipment"] -->|"v2.1.0"| P["📦 Contracts"]
+        O2["Order"] -->|"v2.0.0"| P
     end
 
     classDef bad fill:#3d1c1c,stroke:#f85149,color:#f0f6fc
@@ -313,120 +203,86 @@ flowchart LR
     class S2,O2,P good
 ```
 
-Fark şurada:
+**Bu neden bağımlılık sorunu değil?**
 
 - **Sürümlenmiş** — Order `v2.1.0`'a geçerken Shipment `v2.0.0`'da kalabilir. Aynı anda deploy zorunluluğu yok.
-- **İsteğe bağlı** — Bir servis o paketi hiç kullanmayabilir (hatta başka dilde yazılabilir; sözleşme JSON'dur, C# değil).
-- **Tek yönlü** — Kimse kimsenin *iç* koduna bakmıyor. Sadece herkesin kabul ettiği bir şekle bakıyor.
+- **İsteğe bağlı** — Bir servis o paketi hiç kullanmayabilir; başka dilde bile yazılabilir. Sözleşme JSON'dur, C# değil.
+- **Tek yönlü** — Kimse kimsenin *iç* koduna bakmıyor, herkesin kabul ettiği bir şekle bakıyor.
 
-Asıl kaçınılması gereken bağımlılık türleri bunlar değil: **paylaşılan veritabanı**,
-**paylaşılan runtime** ve **senkron çağrı zincirleri**. Bu projede üçü de yok.
+Asıl kaçınılması gerekenler: **paylaşılan veritabanı**, **paylaşılan runtime**, **senkron
+çağrı zincirleri**. Bu projede üçü de yok.
 
 ---
 
-## 🏛️ Bir servisin iç yapısı
-
-Üç servis de aynı dört katmanda (Clean Architecture):
+## 🏛️ Katmanlar
 
 ```mermaid
 flowchart TB
-    API["🌐 <b>Api</b><br/>Controller · Program.cs · Dockerfile<br/><i>dışarıyla konuşur, her şeyi bağlar</i>"]
-    INF["⚙️ <b>Infrastructure</b><br/>EF Core · MassTransit · Consumer · DbContext<br/><i>NASIL yapılır</i>"]
-    APP["📋 <b>Application</b><br/>Command · Query · Handler · <b>interface'ler</b><br/><i>NE yapılır</i>"]
-    DOM["💎 <b>Domain</b><br/>Entity + iş kuralları<br/><i>sıfır NuGet paketi</i>"]
+    API["🌐 <b>Api</b> — Controller · Program.cs<br/><i>dışarıyla konuşur, her şeyi bağlar</i>"]
+    INF["⚙️ <b>Infrastructure</b> — EF Core · MassTransit · Consumer<br/><i>NASIL yapılır</i>"]
+    APP["📋 <b>Application</b> — Command · Query · Handler · <b>interface'ler</b><br/><i>NE yapılır</i>"]
+    DOM["💎 <b>Domain</b> — Entity + iş kuralları<br/><i>sıfır NuGet paketi</i>"]
 
-    API --> INF
-    INF --> APP
-    APP --> DOM
+    API --> INF --> APP --> DOM
 
-    classDef l1 fill:#1f6feb,stroke:#0d419d,color:#fff,rx:6,ry:6
-    classDef l2 fill:#8957e5,stroke:#6639ba,color:#fff,rx:6,ry:6
-    classDef l3 fill:#2ea043,stroke:#1a7f37,color:#fff,rx:6,ry:6
-    classDef l4 fill:#d29922,stroke:#9e6a03,color:#fff,rx:6,ry:6
+    classDef l1 fill:#1f6feb,stroke:#0d419d,color:#fff
+    classDef l2 fill:#8957e5,stroke:#6639ba,color:#fff
+    classDef l3 fill:#2ea043,stroke:#1a7f37,color:#fff
+    classDef l4 fill:#d29922,stroke:#9e6a03,color:#fff
     class API l1
     class INF l2
     class APP l3
     class DOM l4
 ```
 
-**Oklar hep içeri bakar.** Domain kimseyi tanımaz. Application, Domain'i tanır ama
-EF Core'u tanımaz.
+**Oklar hep içeri bakar.** Domain kimseyi tanımaz; Application, Domain'i tanır ama EF
+Core'u tanımaz.
 
-### Bağımlılığın tersine çevrilmesi
-
-Handler'ın veritabanına yazması gerekiyor — ama Application katmanında veritabanı yok.
-Çözüm: **interface Application'da tanımlanır, implementasyonu Infrastructure'da yaşar.**
+Handler'ın veritabanına yazması gerekir — ama Application'da veritabanı yoktur. Çözüm:
+**interface Application'da tanımlanır, implementasyonu Infrastructure'da yaşar.**
 
 ```csharp
-// Application katmanı — sadece sözleşme, EF Core'dan haberi yok
-public interface IShipmentRepository
-{
-    void Add(Shipment shipment);
-    Task<Shipment?> GetByOrderAsync(Guid orderId, CancellationToken ct);
-}
+// Application — sadece sözleşme, EF Core'dan haberi yok
+public interface IShipmentRepository { void Add(Shipment shipment); }
 
-// Infrastructure katmanı — teknoloji burada
-public sealed class ShipmentRepository(ShipmentDbContext context) : IShipmentRepository
+// Infrastructure — teknoloji burada
+public sealed class ShipmentRepository(ShipmentDbContext ctx) : IShipmentRepository
 {
-    public void Add(Shipment shipment) => context.Shipments.Add(shipment);
+    public void Add(Shipment shipment) => ctx.Shipments.Add(shipment);
 }
 ```
 
-Handler bir `IShipmentRepository` görür; çalışma zamanında elindeki nesne
-Infrastructure'dan gelir. **Kod Application'da, nesne Infrastructure'dan.**
-
-Somut karşılığı: 78 birim testi **hiç veritabanı olmadan**, 1.5 saniyede çalışıyor.
-
-> **Kasıtlı bir sapma:** Shipment Service'te `ValidationBehavior` hattı yok. Çünkü o
-> servisin dışarıya açılan **yazma ucu yok** — gönderi yalnızca bir event'le doğar.
-> Doğrulanacak istemci gövdesi olmayınca validator boş bir tören olurdu. Şablon
-> körü körüne kopyalanmadı.
+**Kod Application'da, nesne Infrastructure'dan.** Somut karşılığı: 78 birim testi hiç
+veritabanı olmadan, ~1.5 saniyede çalışıyor.
 
 ---
 
-## 🛡️ Dağıtık sistemin iki zor problemi
+## 🛡️ İki zor problem
 
-Bu bölüm projenin asıl varlık sebebi. İkisi de **her** event-driven sistemde karşına çıkar.
+### 1 · Dual write — "event kayboldu"
 
-### Problem 1 — Dual write: "event kayboldu"
+Sipariş oluşunca veritabanına yaz **ve** event gönder. Ama bunlar **iki ayrı sistem** ve
+aralarında ortak transaction yok:
 
-Sipariş oluşunca iki şey olmalı: veritabanına yaz **ve** event gönder. Ama bunlar
-**iki ayrı sistem** ve aralarında ortak transaction yok.
-
-```mermaid
-flowchart TB
-    Start(["POST /api/orders"])
-    W1["✅ Veritabanına yazıldı"]
-    Crash["💥 Süreç öldü"]
-    W2["❌ Event gönderilemedi"]
-    Result["😱 Sipariş var, gönderi HİÇ oluşmaz<br/>Müşteri bekler, sistem sessiz"]
-
-    Start --> W1 --> Crash --> W2 --> Result
-
-    classDef ok fill:#1c3d24,stroke:#3fb950,color:#f0f6fc
-    classDef bad fill:#3d1c1c,stroke:#f85149,color:#f0f6fc
-    class W1 ok
-    class Crash,W2,Result bad
+```
+✅ DB yazıldı → 💥 süreç öldü → ❌ event gitmedi
+   Sipariş var, gönderi HİÇ oluşmaz. Müşteri bekler, sistem sessiz.
 ```
 
-`try/catch` bunu **çözmez** — catch bloğu çalışmadan da ölebilirsin (process kill,
-makine kapanması). Sorun hata yakalamak değil, **iki sistemi atomik yapamamak**.
+`try/catch` bunu **çözmez** — catch bloğu çalışmadan da ölebilirsin. Sorun hata yakalamak
+değil, **iki sistemi atomik yapamamak**.
 
-#### Çözüm: Transactional Outbox
-
-Event'i de bir **veritabanı satırı** yap. O zaman iş verisiyle aynı transaction'a girer.
+**Çözüm: Transactional Outbox.** Event'i de bir veritabanı satırı yap:
 
 ```mermaid
 flowchart LR
     subgraph TX["⚛️ TEK TRANSACTION"]
-        direction TB
         I1["INSERT orders"]
         I2["INSERT outbox_message"]
     end
-
     TX ==>|"COMMIT"| BG["⏱️ Arka plan servisi<br/>tabloyu tarar"]
     BG ==>|"yayınla"| R{{"🐇 RabbitMQ"}}
-    BG -->|"sonra satırı sil"| DEL["🗑️"]
+    BG -->|"sonra sil"| DEL["🗑️"]
 
     classDef tx fill:#0d2d4d,stroke:#1f6feb,color:#f0f6fc
     classDef broker fill:#ff6600,stroke:#b34700,color:#fff
@@ -434,52 +290,31 @@ flowchart LR
     class R broker
 ```
 
-**Sonuç:** Broker 10 dakika çökük kalsa bile hiçbir event kaybolmaz. Satırlar
-veritabanında bekler, broker dönünce sırayla gider.
+Broker 10 dakika çökük kalsa bile hiçbir event kaybolmaz.
+`outbox_message` bir kuyruk değil, **bekleme odası** — gönderilen satır silinir.
 
-> `outbox_message` bir kuyruk değil, bir **bekleme odası**. Gönderilen satır silinir —
-> o yüzden tablo normalde boştur.
+### 2 · At-least-once — "aynı mesaj iki kez geldi"
 
-### Problem 2 — At-least-once: "aynı mesaj iki kez geldi"
-
-Outbox, event'in **kaybolmamasını** garanti etti. Ama şunu çözmedi:
-
-```mermaid
-flowchart TB
-    R1["outbox satırı okundu"]
-    R2["RabbitMQ'ya basıldı"]
-    R3["💥 'gönderildi' damgası<br/>basılmadan öldü"]
-    R4["Servis kalkınca satırı<br/>yine gönderilmemiş görür"]
-    R5["⚠️ AYNI mesaj İKİNCİ KEZ yayınlanır"]
-
-    R1 --> R2 --> R3 --> R4 --> R5
-
-    classDef warn fill:#3d2f1c,stroke:#d29922,color:#f0f6fc
-    class R3,R5 warn
-```
-
-Bu **kaçınılmaz**. Dağıtık sistemde "tam bir kez teslimat" diye bir şey yoktur — ağ,
-cevabın mı yoksa isteğin mi kaybolduğunu ayırt edemez. Elde edilebilecek olan:
+Outbox, event'in kaybolmamasını garanti etti; ama "gönderildi" damgası basılmadan ölünürse
+mesaj **ikinci kez** yayınlanır. Bu **kaçınılmaz** — dağıtık sistemde "tam bir kez teslimat"
+diye bir şey yoktur. Elde edilebilecek olan:
 
 ```
 at-least-once teslimat  +  idempotent consumer  =  ETKİSİ BİR KEZ
 ```
 
-#### Çözüm: iki katmanlı savunma
+**Çözüm: iki katmanlı savunma.**
 
 ```mermaid
 flowchart TB
-    MSG(["📨 Mesaj geldi<br/>messageId = abc-123"])
+    MSG(["📨 messageId = abc-123"])
     CHECK{"inbox_state'te<br/>abc-123 var mı?"}
-    SKIP["✋ Consumer HİÇ çalışmaz<br/>ack atılır, biter"]
-
+    SKIP["✋ Consumer HİÇ çalışmaz"]
     subgraph TX2["⚛️ TEK TRANSACTION"]
-        direction TB
         T1["INSERT inbox_state"]
         T2["INSERT shipments"]
-        T3["INSERT outbox_message<br/>(ShipmentCreated)"]
+        T3["INSERT outbox_message"]
     end
-
     UNIQUE{{"🔒 shipments.order_id<br/>UNIQUE index"}}
 
     MSG --> CHECK
@@ -495,54 +330,36 @@ flowchart TB
     class UNIQUE lock
 ```
 
-| Katman | Neyi yakalar | Nasıl |
-|---|---|---|
-| **`inbox_state`** | **Teknik** tekrar — aynı `messageId` iki kez | Consumer hiç çalışmaz |
-| **`order_id` UNIQUE** | **Mantıksal** tekrar — farklı `messageId`, aynı sipariş | Veritabanı ikinci `INSERT`'i reddeder |
+| Katman | Neyi yakalar |
+|---|---|
+| **`inbox_state`** | **Teknik** tekrar — aynı `messageId` iki kez → consumer hiç çalışmaz |
+| **`order_id` UNIQUE** | **Mantıksal** tekrar — farklı `messageId`, aynı sipariş → DB reddeder |
 
-**Neden ikincisi de gerekli?** `inbox_state`'in anahtarı `(messageId, consumerId)`.
-Yayıncı bir hata yüzünden **yeni bir messageId** ile aynı siparişi yayınlarsa, inbox
-için bu yepyeni bir mesajdır — göremez. Orada tekrarı ancak iş kuralı yakalar.
+İkincisi neden gerekli? `inbox_state`'in anahtarı `(messageId, consumerId)`. Yayıncı bir
+hata yüzünden **yeni bir messageId** ile aynı siparişi yayınlarsa inbox onu göremez.
+Koddaki "zaten var mı" kontrolü de tek başına yetmez: iki kopya aynı anda çalışırsa ikisi
+de "yok" cevabını alır. **Bir yarışı ancak tek bir noktada sıraya sokabilirsin — o nokta
+veritabanıdır.**
 
-Ve koddaki "zaten var mı" kontrolü de tek başına yetmez: iki kopya aynı anda çalışırsa
-ikisi de "yok" cevabını alır. **Bir yarışı ancak tek bir noktada sıraya sokabilirsin —
-o nokta veritabanıdır.**
-
-> Her iki katman da ayrı entegrasyon testleriyle kanıtlanmıştır:
-> `Consume_WhenSameMessageArrivesTwice_CreatesSingleShipment` ve
-> `Consume_WhenDifferentMessageCarriesSameOrder_StillCreatesSingleShipment`.
-
-### Peki mesaj gerçekten bozuksa?
-
-3 kez yeniden denenir (1sn → 2sn → 4sn), sonra `order-created_error` kuyruğuna taşınır.
-Orada **görünür** hâlde bekler; hata mesajı ve stack trace başlıklarında taşınır.
-Bozuk bir mesaj sistemi kilitleyemez.
+> Gerçekten bozuk bir mesaj 3 kez denenir (1sn → 2sn → 4sn), sonra `order-created_error`
+> kuyruğuna taşınır ve orada **görünür** hâlde bekler. Bozuk mesaj sistemi kilitleyemez.
 
 ---
 
 ## 🚀 Çalıştır
 
-**Gereken:** Docker Desktop. (.NET SDK yalnızca testleri çalıştırmak için gerekir.)
+**Gereken:** Docker Desktop. (.NET SDK yalnızca testler için.)
 
 ```bash
 git clone https://github.com/erenctns/Logistic-Microservice_Mvp.git
 cd Logistic-Microservice_Mvp
-cp .env.example .env
-```
-
-`.env` içindeki `change_me_` ile başlayan değerleri doldur, sonra:
-
-```bash
+cp .env.example .env     # change_me_ ile başlayan değerleri doldur
 docker compose up -d --build
 ```
 
-İlk açılış ~2 dakika (imajlar derleniyor). Hazır olduğunda:
-
 | Adres | Ne |
 |---|---|
-| http://localhost:8081/openapi/v1.json | Auth Service |
-| http://localhost:8082/openapi/v1.json | Order Service |
-| http://localhost:8083/openapi/v1.json | Shipment Service |
+| `localhost:8081` / `8082` / `8083` | Auth / Order / Shipment |
 | **http://localhost:15672** | **RabbitMQ arayüzü** |
 | `localhost:5432` | PostgreSQL |
 
@@ -551,26 +368,18 @@ docker compose up -d --build
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"customer@smartlogistics.local","password":"<SEED_DEFAULT_PASSWORD>"}' \
-  | jq -r .token)
+  -d '{"email":"customer@smartlogistics.local","password":"<SEED_DEFAULT_PASSWORD>"}' | jq -r .token)
 
 ORDER=$(curl -s -X POST http://localhost:8082/api/orders \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"deliveryAddress":"Moda, Kadikoy","packageSize":"Large"}' | jq -r .orderId)
 
-sleep 2
-
-curl -s http://localhost:8083/api/shipments/by-order/$ORDER \
+sleep 2 && curl -s http://localhost:8083/api/shipments/by-order/$ORDER \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
 
 ```json
-{
-  "orderId": "ee297d26-...",
-  "trackingNumber": "TR-2026-00001",
-  "status": "Created",
-  "deliveryAddress": "Moda, Kadikoy"
-}
+{ "trackingNumber": "TR-2026-00001", "status": "Created", "deliveryAddress": "Moda, Kadikoy" }
 ```
 
 **Gönderiyi oluşturmak için hiçbir şey yapmadın.** Bir event yeterliydi.
@@ -579,93 +388,56 @@ curl -s http://localhost:8083/api/shipments/by-order/$ORDER \
 
 ## 🔍 Kendi gözünle gör
 
-Mimariyi anlatmak kolay; **çalıştığını göstermek** başka. Aşağıdaki üç deney,
-yukarıda anlatılan her şeyi elle doğrulamanı sağlar.
-
-### Deney 1 — Broker'ı çökert (outbox'ın kanıtı)
-
-```bash
-docker compose stop rabbitmq
-```
-
-Şimdi bir sipariş oluştur → **HTTP 201 alırsın.** Sonra:
-
-```bash
-docker exec sl-postgres psql -U logistics -d order_db \
-  -c "SELECT message_id, message_type FROM outbox_message;"
-```
-
-Event orada, gönderilmeyi bekliyor. Broker'ı geri aç:
-
-```bash
-docker compose start rabbitmq
-```
-
-~15 saniye sonra aynı sorgu **0 satır** döner — event gönderildi, satır silindi.
-Ve gönderi oluştu. **Hiçbir şey kaybolmadı.**
-
-### Deney 2 — Tüketiciyi durdur (asenkronluğun kanıtı)
-
-```bash
-docker compose stop shipment-service
-```
-
-Sipariş oluştur, sonra **http://localhost:15672** → *Queues* → `order-created`:
-
-```
-Ready: 1      Consumers: 0     ← mesaj bekliyor, dinleyen yok
-```
-
-*Get messages* ile içine bak — MassTransit zarfını görürsün. Sonra servisi aç:
-
-```bash
-docker compose start shipment-service
-```
-
-Mesaj anında tüketilir, gönderi oluşur.
-
-### Deney 3 — Idempotency (inbox'ın kanıtı)
-
-Deney 2'deki zarfı kopyala. RabbitMQ arayüzünde `order-created` exchange'ine
-**iki kez** yayınla (`content_type: application/vnd.masstransit+json`).
+| Deney | Komut | Ne göreceksin |
+|---|---|---|
+| **Outbox** | `docker compose stop rabbitmq` → sipariş oluştur | **HTTP 201!** `order_db.outbox_message`'da 1 satır bekliyor. `start rabbitmq` → satır silinir, gönderi oluşur |
+| **Asenkronluk** | `docker compose stop shipment-service` → sipariş oluştur | RabbitMQ arayüzü → `order-created`: **Ready 1, Consumers 0**. *Get messages* ile zarfın içine bak |
+| **Idempotency** | Aynı zarfı `order-created` exchange'ine iki kez yayınla | `inbox_state.receive_count` **artar**, `shipments` **artmaz** |
 
 ```sql
-SELECT receive_count FROM inbox_state;   -- ARTAR  → mesaj gerçekten geldi
-SELECT COUNT(*) FROM shipments;          -- ARTMAZ → consumer hiç çalışmadı
+-- order_db: gönderilmeyi bekleyen event'ler (normalde boş)
+SELECT message_id, message_type FROM outbox_message;
+-- shipment_db: işlenmiş her mesajın damgası
+SELECT message_id, receive_count, consumed FROM inbox_state;
 ```
 
-### Nereye bakılır
-
-| Yer | Ne anlatır |
-|---|---|
-| RabbitMQ → **Exchanges** | Mesaj tipi başına bir fanout exchange |
-| Exchange → **Bindings** | **Kim dinliyor** |
-| RabbitMQ → **Queues** | Bekleyen mesaj, tüketici sayısı |
-| `order_db.outbox_message` | Gönderilmeyi bekleyen event'ler (normalde boş) |
-| `shipment_db.inbox_state` | İşlenmiş her mesajın damgası |
+RabbitMQ arayüzünde: **Exchanges** (mesaj tipi başına bir fanout) · **Bindings**
+(*kim dinliyor*) · **Queues** (bekleyen mesaj, tüketici sayısı).
 
 ---
 
 ## 🧪 Testler
 
 ```bash
-dotnet test
+dotnet test        # toplam: 102 · başarılı: 102 · ~38s
 ```
 
-```
-toplam: 102    başarılı: 102    süre: ~38s
-```
+### Yaklaşım
 
-| Tür | Adet | Ne doğrular |
+| Katman | Adet | Nasıl test edilir |
 |---|---|---|
-| **Unit** | 78 | İş kuralları, durum makineleri, handler akışları — mock'lu, I/O yok |
-| **Integration** | 24 | **Gerçek** PostgreSQL + **gerçek** RabbitMQ (Testcontainers) |
+| **Domain** | 30 | Saf, **mock yok** — entity'ler I/O'suz olduğu için gerçek nesnelerle çalışılır |
+| **Application** | 48 | Bağımlılıklar `NSubstitute` ile taklit edilir; veritabanı yok, ~1.5 sn |
+| **Integration** | 24 | **Testcontainers** ile **gerçek** PostgreSQL + **gerçek** RabbitMQ |
 
-Entegrasyon testleri in-memory veritabanı **kullanmaz**. Doğrulanmak istenen şey tam
-olarak transaction semantiği ve broker davranışı — in-memory taklitler bunları
-simüle edemez, yanlış güven verir.
+**Entegrasyon testleri in-memory veritabanı kullanmaz.** Doğrulanan şey tam olarak
+transaction semantiği ve broker davranışı; in-memory taklitler bunları simüle edemez ve
+yanlış güven verir.
 
-Vitrin testleri:
+Nasıl çalışıyor:
+
+- **Container yaşam döngüsü** — `PostgresFixture` / `RabbitMqFixture` bir xUnit *collection*
+  başına **bir kez** container kaldırır (her test sınıfı için değil), test bitince siler.
+- **İzolasyon** — her test öncesi tablolar temizlenir **ve** RabbitMQ kuyrukları purge edilir.
+  İki durumlu bir sistemde sadece veritabanını sıfırlamak yetmiyor.
+- **Sorgu daraltma** — bütün sayımlar o testin kendi `orderId` / `messageId`'sine
+  daraltılmış; sızan bir mesaj testi düşüremiyor.
+- **Ayrı DI kapları** — consumer testlerinde yayıncı ve tüketici **iki ayrı** `ServiceProvider`'da
+  kuruluyor, çünkü gerçekte de ayrı process'te yaşıyorlar (`AddMassTransit` kap başına bir kez çağrılabilir).
+- **Gerçek servis kodu** — testler `AddApplication()` + `AddInfrastructure()` çağırıyor;
+  consumer, inbox ve outbox üretimde nasıl kuruluyorsa öyle.
+
+### Vitrin testleri
 
 | Test | Kanıtladığı |
 |---|---|
@@ -681,43 +453,33 @@ Vitrin testleri:
 
 ```
 src/
-├── BuildingBlocks/              🧱 teknik altyapı (iş mantığı YOK)
-│   ├── BuildingBlocks.Domain/          Result<T> · Error · BaseEntity
-│   ├── BuildingBlocks.Application/     IEventBus
-│   └── BuildingBlocks.Infrastructure/  MassTransit · JWT kurulumu
-│
-├── Contracts/                   📜 servisler arası sözleşmeler
-│   ├── Events/OrderCreated.cs
-│   ├── Events/ShipmentCreated.cs
-│   └── Roles.cs
-│
+├── BuildingBlocks/       🧱 teknik altyapı (iş mantığı YOK)
+├── Contracts/            📜 servisler arası sözleşmeler
 └── services/
-    ├── AuthService/             🔑 kimlik · JWT üretimi
-    ├── OrderService/            📦 sipariş · YAYINCI (outbox)
-    └── ShipmentService/         🚚 gönderi · TÜKETİCİ (inbox) + yayıncı
+    ├── AuthService/      🔑 kimlik · JWT üretimi
+    ├── OrderService/     📦 sipariş · YAYINCI (outbox)
+    └── ShipmentService/  🚚 gönderi · TÜKETİCİ (inbox) + yayıncı
 
-tests/                           102 test
-infrastructure/docker/postgres/  veritabanı init script'i
-docker-compose.yml               5 container
+tests/                    102 test
+infrastructure/           veritabanı init script'i
+docker-compose.yml        5 container
 ```
 
 Her servis dört katman: `*.Domain`, `*.Application`, `*.Infrastructure`, `*.Api`.
 
 ---
 
-## ⚙️ Teknoloji seçimleri
+## ⚙️ Teknoloji ve alışkanlıklar
 
 | Seçim | Gerekçe |
 |---|---|
-| **.NET 10** | `global.json` ile sürüm sabit — herkeste aynı derleyici |
-| **MassTransit 8.5** | Outbox/inbox, retry, DLQ hazır gelir. v9 ticari lisansa geçti; v8 Apache-2.0 |
+| **.NET 10** | `global.json` ile sürüm sabit |
+| **MassTransit 8.5** | Outbox/inbox, retry, DLQ hazır. v9 ticari; v8 Apache-2.0 |
 | **MediatR 12.5** | Apache-2.0 olan son sürüm |
 | **PostgreSQL** | Gerçek transaction semantiği — outbox'ın ön şartı |
-| **Testcontainers** | Testlerde gerçek altyapı; in-memory taklit yanlış güven verir |
+| **Testcontainers** | Testlerde gerçek altyapı |
 | **AwesomeAssertions** | FluentAssertions v7'nin açık kaynak fork'u (v8 ticari) |
-| **Central Package Management** | Paket sürümleri tek dosyada; sürüm kayması imkansız |
-
-### Güvenlik alışkanlıkları
+| **Central Package Management** | Paket sürümleri tek dosyada |
 
 - Sır yok: bütün şifreler `.env` → ortam değişkeni. `appsettings.json` temiz.
 - Container'lar **root değil** (`USER $APP_UID`).
@@ -727,21 +489,16 @@ Her servis dört katman: `*.Domain`, `*.Application`, `*.Infrastructure`, `*.Api
 
 ---
 
-## 🚧 Kapsam dışı (bilinçli olarak)
+## 🚧 Kapsam dışı (bilinçli)
 
-Bu bir MVP. Aşağıdakiler **yapılmadı** — ve neden yapılmadığı da mimarinin parçası:
+Kurye / teslimat / bildirim servisleri · API Gateway · Frontend · Dağıtık izleme
+(correlation ID, Serilog) · Redis.
 
-| Yok | Not |
-|---|---|
-| Kurye / teslimat / bildirim servisleri | Mimari zaten üç servisle kanıtlanıyor; dördüncüsü aynı kalıbın tekrarı olurdu |
-| API Gateway | Servisler doğrudan portlarından erişilebilir |
-| Frontend | Odak backend mimarisi |
-| Dağıtık izleme (correlation ID, Serilog) | Bir sonraki doğal adım |
-| Redis / cache | Gerçek bir ihtiyaç doğmadan eklenmez |
+Mimari üç servisle zaten kanıtlanıyor; dördüncüsü aynı kalıbın tekrarı olurdu.
 
-> `ShipmentCreated` event'ini **dinleyen kimse yok** — ve bu bir eksiklik değil,
-> mimarinin gösterisi: yayıncı kimin dinlediğini bilmez. Yarın bir teslimat servisi
-> eklenirse Shipment Service'te **tek satır değişmeden** abone olur.
+> `ShipmentCreated`'ı **dinleyen kimse yok** — bu bir eksiklik değil, mimarinin gösterisi:
+> yayıncı kimin dinlediğini bilmez. Bir teslimat servisi eklenirse Shipment Service'te
+> **tek satır değişmeden** abone olur.
 
 ---
 
