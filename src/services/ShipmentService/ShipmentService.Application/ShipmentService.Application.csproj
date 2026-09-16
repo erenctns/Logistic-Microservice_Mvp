@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- "NE yapilir" katmani. Interface'ler burada TANIMLANIR.
+
+       DIKKAT: Order ve Auth'un aksine burada FluentValidation YOK.
+       Sebebi su - bu servisin disariya acilan YAZMA ucu yok; shipment
+       sadece bir event'le dogar. Dogrulanacak bir istemci govdesi
+       olmadigi icin validator hatti da gereksiz. Sablonu oldugu gibi
+       kopyalamiyoruz, ihtiyaci olan parcasini aliyoruz. -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="MediatR" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../ShipmentService.Domain/ShipmentService.Domain.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.Application/BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="../../../Contracts/Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

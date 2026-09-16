@@ -13,7 +13,7 @@ public enum OrderStatus
     // Siparis olusturuldu, henuz shipment yaratilmadi.
     Pending = 0,
 
-    // Shipment olustu, teslimat sureci isliyor (Step 08'de event ile gelecek).
+    // Shipment olustu, teslimat sureci isliyor (Step 11'de event ile gelecek).
     Processing = 1,
 
     // Teslim edildi.

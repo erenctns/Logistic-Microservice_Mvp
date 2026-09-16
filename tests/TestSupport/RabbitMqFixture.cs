@@ -72,6 +72,19 @@ public class RabbitMqFixture : IAsyncLifetime
             : 0;
     }
 
+    // Testler arasi temizlik. Kuyruklar container ile birlikte YASAR:
+    // bir testten artan mesaj, sonraki testin kabinde tuketilir ve o testi
+    // kirletir ("neden iki gonderi olustu?"). Veritabanini her testte
+    // sifirliyoruz, broker'i da sifirlamak gerekiyor.
+    //
+    // Kuyruk henuz olusmamissa 404 doner; bu bir hata degil, sessizce gecilir.
+    public async Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default)
+    {
+        using var response = await _management!.DeleteAsync(
+            $"/api/queues/%2F/{queueName}/contents",
+            cancellationToken);
+    }
+
     public async ValueTask DisposeAsync()
     {
         _management?.Dispose();

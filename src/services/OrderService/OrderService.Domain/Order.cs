@@ -60,7 +60,8 @@ public sealed class Order : BaseEntity
         return new Order(Guid.NewGuid(), customerId, address, packageSize);
     }
 
-    // Step 08: ShipmentCreated event'i geldiginde cagrilacak.
+    // Step 11: siparis yasam dongusu event'lerle surulunce cagrilacak.
+    // (Step 08'de Shipment Service olustu ama Order henuz consumer degil.)
     public Result MarkAsProcessing() => TransitionTo(OrderStatus.Processing, from: OrderStatus.Pending);
 
     // Step 12: Delivered event'i geldiginde cagrilacak.

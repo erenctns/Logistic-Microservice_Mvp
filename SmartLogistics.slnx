@@ -20,6 +20,12 @@
     <Project Path="src/services/OrderService/OrderService.Domain/OrderService.Domain.csproj" />
     <Project Path="src/services/OrderService/OrderService.Infrastructure/OrderService.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/services/ShipmentService/">
+    <Project Path="src/services/ShipmentService/ShipmentService.Api/ShipmentService.Api.csproj" />
+    <Project Path="src/services/ShipmentService/ShipmentService.Application/ShipmentService.Application.csproj" />
+    <Project Path="src/services/ShipmentService/ShipmentService.Domain/ShipmentService.Domain.csproj" />
+    <Project Path="src/services/ShipmentService/ShipmentService.Infrastructure/ShipmentService.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AuthService.IntegrationTests/AuthService.IntegrationTests.csproj" />
     <Project Path="tests/AuthService.UnitTests/AuthService.UnitTests.csproj" />
@@ -27,6 +33,8 @@
     <Project Path="tests/BuildingBlocks.UnitTests/BuildingBlocks.UnitTests.csproj" />
     <Project Path="tests/OrderService.IntegrationTests/OrderService.IntegrationTests.csproj" />
     <Project Path="tests/OrderService.UnitTests/OrderService.UnitTests.csproj" />
+    <Project Path="tests/ShipmentService.IntegrationTests/ShipmentService.IntegrationTests.csproj" />
+    <Project Path="tests/ShipmentService.UnitTests/ShipmentService.UnitTests.csproj" />
     <Project Path="tests/TestSupport/TestSupport.csproj" />
   </Folder>
 </Solution>
