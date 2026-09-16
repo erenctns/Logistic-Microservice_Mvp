@@ -1,0 +1,13 @@
+flowchart LR
+    subgraph BAD["❌ Gerçek bağımlılık"]
+        S1["Shipment"] -->|"referans"| O1["Order'ın<br/>iç kodu"]
+    end
+    subgraph GOOD["✅ Sürümlenmiş paket"]
+        S2["Shipment"] -->|"v2.1.0"| P["📦 Contracts"]
+        O2["Order"] -->|"v2.0.0"| P
+    end
+
+    classDef bad fill:#3d1c1c,stroke:#f85149,color:#f0f6fc
+    classDef good fill:#1c3d24,stroke:#3fb950,color:#f0f6fc
+    class S1,O1 bad
+    class S2,O2,P good

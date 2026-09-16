@@ -1,0 +1,11 @@
+flowchart LR
+    AS["🔑 Auth"] -->|"ConnectionStrings__AuthDb"| A[("auth_db")]
+    OS["📦 Order"] -->|"ConnectionStrings__OrderDb"| O[("order_db")]
+    SS["🚚 Shipment"] -->|"ConnectionStrings__ShipmentDb"| S[("shipment_db")]
+    AS -.->|"❌ erişemez"| O
+    SS -.->|"❌ erişemez"| O
+
+    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff
+    classDef db fill:#0d1117,stroke:#30363d,color:#c9d1d9
+    class AS,OS,SS svc
+    class A,O,S db

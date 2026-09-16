@@ -1,0 +1,13 @@
+flowchart TB
+    subgraph TX["⚛️ TEK TRANSACTION"]
+        I1["INSERT orders"]
+        I2["INSERT outbox_message"]
+    end
+    TX ==>|"COMMIT"| BG["⏱️ Arka plan servisi<br/>tabloyu tarar"]
+    BG ==>|"yayınla"| R{{"🐇 RabbitMQ"}}
+    BG -->|"sonra satırı sil"| DEL["🗑️"]
+
+    classDef tx fill:#0d2d4d,stroke:#1f6feb,color:#f0f6fc
+    classDef broker fill:#ff6600,stroke:#b34700,color:#fff
+    class I1,I2 tx
+    class R broker

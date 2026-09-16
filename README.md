@@ -19,40 +19,10 @@ edilmiş bir örnek üzerinden göstermek.
 
 ## 🗺️ Mimari
 
-```mermaid
-flowchart LR
-    Client(["👤 Müşteri"])
-
-    Auth["🔑 <b>Auth Service</b><br/>:8081"]
-    Order["📦 <b>Order Service</b><br/>:8082"]
-    Ship["🚚 <b>Shipment Service</b><br/>:8083"]
-
-    Rabbit{{"🐇 <b>RabbitMQ</b>"}}
-
-    AuthDB[("🗄️ auth_db")]
-    OrderDB[("🗄️ order_db")]
-    ShipDB[("🗄️ shipment_db")]
-
-    Client -->|"① giriş yap"| Auth
-    Auth -.->|"JWT"| Client
-    Client -->|"② sipariş oluştur"| Order
-    Client -->|"④ gönderiyi sorgula"| Ship
-
-    Order ==>|"③ OrderCreated"| Rabbit
-    Rabbit ==>|"order-created"| Ship
-    Ship ==>|"ShipmentCreated"| Rabbit
-
-    Auth --- AuthDB
-    Order --- OrderDB
-    Ship --- ShipDB
-
-    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff
-    classDef db fill:#0d1117,stroke:#30363d,color:#c9d1d9
-    classDef broker fill:#ff6600,stroke:#b34700,color:#fff
-    class Auth,Order,Ship svc
-    class AuthDB,OrderDB,ShipDB db
-    class Rabbit broker
-```
+<picture>
+  <source media="(max-width: 700px)" srcset="assets/mimari-mobil.svg">
+  <img alt="Mimari: müşteri, üç servis ve RabbitMQ" src="assets/mimari.svg">
+</picture>
 
 | Değişmez kural | Sonucu |
 |---|---|
@@ -68,48 +38,10 @@ flowchart LR
 
 ## 🎬 Bir siparişin yolculuğu
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor M as 👤 Müşteri
-    participant A as 🔑 Auth
-    participant O as 📦 Order
-    participant ODB as 🗄️ order_db
-    participant R as 🐇 RabbitMQ
-    participant S as 🚚 Shipment
-    participant SDB as 🗄️ shipment_db
-
-    M->>A: POST /api/auth/login
-    A-->>M: JWT (rol: Customer)
-
-    M->>O: POST /api/orders + JWT
-    Note over O: customerId token'ın "sub" claim'inden —<br/>istemcinin gönderdiğine güvenilmez
-
-    rect rgb(210, 235, 255)
-    Note over O,ODB: ⚛️ TEK TRANSACTION
-    O->>ODB: INSERT orders
-    O->>ODB: INSERT outbox_message
-    end
-
-    O-->>M: 201 Created
-    Note over M,O: Müşteri beklemedi.<br/>RabbitMQ çökük olsa bile 201 döner.
-
-    O->>R: arka plan servisi outbox'ı süpürür
-    ODB->>ODB: outbox satırı silinir
-    R->>S: order-created kuyruğu
-
-    rect rgb(255, 235, 210)
-    Note over S,SDB: 🛡️ inbox kontrolü + TEK TRANSACTION
-    S->>SDB: bu message_id işlendi mi?
-    S->>SDB: INSERT inbox_state
-    S->>SDB: INSERT shipments (TR-2026-00001)
-    S->>SDB: INSERT outbox_message
-    end
-
-    S->>R: ShipmentCreated
-    M->>S: GET /api/shipments/by-order/{id}
-    S-->>M: trackingNumber: TR-2026-00001
-```
+<picture>
+  <source media="(max-width: 700px)" srcset="assets/senaryo-mobil.svg">
+  <img alt="Bir siparişin yolculuğu: login, sipariş, outbox, kuyruk, inbox, gönderi" src="assets/senaryo.svg">
+</picture>
 
 Üç kritik nokta:
 
@@ -124,19 +56,7 @@ sequenceDiagram
 Tek container, **üç ayrı veritabanı**. Her servis **yalnızca kendi connection string'ini**
 biliyor; `shipment_db` diye bir ayarı yok, dolayısıyla oraya bakamaz.
 
-```mermaid
-flowchart LR
-    AS["🔑 Auth"] -->|"ConnectionStrings__AuthDb"| A[("auth_db")]
-    OS["📦 Order"] -->|"ConnectionStrings__OrderDb"| O[("order_db")]
-    SS["🚚 Shipment"] -->|"ConnectionStrings__ShipmentDb"| S[("shipment_db")]
-    AS -.->|"❌ erişemez"| O
-    SS -.->|"❌ erişemez"| O
-
-    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff
-    classDef db fill:#0d1117,stroke:#30363d,color:#c9d1d9
-    class AS,OS,SS svc
-    class A,O,S db
-```
+<img alt="Database-per-service: her servis yalnızca kendi veritabanına bağlanır" src="assets/database-per-service.svg">
 
 **Asıl sınır fiziksel değil, mantıksal.** Aynı sunucuda olmaları "bir servis diğerinin
 tablosuna `JOIN` atar" kazasını mümkün kılmıyor — çünkü ayarı yok.
@@ -187,21 +107,7 @@ Bu depoda ikisi de proje referansı — öğrenmek için en kolay hâli. Gerçek
 <PackageReference Include="Logistics.Contracts" Version="2.1.0" />
 ```
 
-```mermaid
-flowchart LR
-    subgraph BAD["❌ Gerçek bağımlılık"]
-        S1["Shipment"] -->|"referans"| O1["Order'ın<br/>iç kodu"]
-    end
-    subgraph GOOD["✅ Sürümlenmiş paket"]
-        S2["Shipment"] -->|"v2.1.0"| P["📦 Contracts"]
-        O2["Order"] -->|"v2.0.0"| P
-    end
-
-    classDef bad fill:#3d1c1c,stroke:#f85149,color:#f0f6fc
-    classDef good fill:#1c3d24,stroke:#3fb950,color:#f0f6fc
-    class S1,O1 bad
-    class S2,O2,P good
-```
+<img alt="Gerçek bağımlılık ile sürümlenmiş paket farkı" src="assets/nuget.svg">
 
 **Bu neden bağımlılık sorunu değil?**
 
@@ -216,24 +122,7 @@ Asıl kaçınılması gerekenler: **paylaşılan veritabanı**, **paylaşılan r
 
 ## 🏛️ Katmanlar
 
-```mermaid
-flowchart TB
-    API["🌐 <b>Api</b> — Controller · Program.cs<br/><i>dışarıyla konuşur, her şeyi bağlar</i>"]
-    INF["⚙️ <b>Infrastructure</b> — EF Core · MassTransit · Consumer<br/><i>NASIL yapılır</i>"]
-    APP["📋 <b>Application</b> — Command · Query · Handler · <b>interface'ler</b><br/><i>NE yapılır</i>"]
-    DOM["💎 <b>Domain</b> — Entity + iş kuralları<br/><i>sıfır NuGet paketi</i>"]
-
-    API --> INF --> APP --> DOM
-
-    classDef l1 fill:#1f6feb,stroke:#0d419d,color:#fff
-    classDef l2 fill:#8957e5,stroke:#6639ba,color:#fff
-    classDef l3 fill:#2ea043,stroke:#1a7f37,color:#fff
-    classDef l4 fill:#d29922,stroke:#9e6a03,color:#fff
-    class API l1
-    class INF l2
-    class APP l3
-    class DOM l4
-```
+<img alt="Katmanlar: Api, Infrastructure, Application, Domain" src="assets/katmanlar.svg">
 
 **Oklar hep içeri bakar.** Domain kimseyi tanımaz; Application, Domain'i tanır ama EF
 Core'u tanımaz.
@@ -274,21 +163,10 @@ değil, **iki sistemi atomik yapamamak**.
 
 **Çözüm: Transactional Outbox.** Event'i de bir veritabanı satırı yap:
 
-```mermaid
-flowchart LR
-    subgraph TX["⚛️ TEK TRANSACTION"]
-        I1["INSERT orders"]
-        I2["INSERT outbox_message"]
-    end
-    TX ==>|"COMMIT"| BG["⏱️ Arka plan servisi<br/>tabloyu tarar"]
-    BG ==>|"yayınla"| R{{"🐇 RabbitMQ"}}
-    BG -->|"sonra sil"| DEL["🗑️"]
-
-    classDef tx fill:#0d2d4d,stroke:#1f6feb,color:#f0f6fc
-    classDef broker fill:#ff6600,stroke:#b34700,color:#fff
-    class I1,I2 tx
-    class R broker
-```
+<picture>
+  <source media="(max-width: 700px)" srcset="assets/outbox-mobil.svg">
+  <img alt="Transactional outbox: tek transaction, sonra arka planda yayın" src="assets/outbox.svg">
+</picture>
 
 Broker 10 dakika çökük kalsa bile hiçbir event kaybolmaz.
 `outbox_message` bir kuyruk değil, **bekleme odası** — gönderilen satır silinir.
@@ -305,30 +183,7 @@ at-least-once teslimat  +  idempotent consumer  =  ETKİSİ BİR KEZ
 
 **Çözüm: iki katmanlı savunma.**
 
-```mermaid
-flowchart TB
-    MSG(["📨 messageId = abc-123"])
-    CHECK{"inbox_state'te<br/>abc-123 var mı?"}
-    SKIP["✋ Consumer HİÇ çalışmaz"]
-    subgraph TX2["⚛️ TEK TRANSACTION"]
-        T1["INSERT inbox_state"]
-        T2["INSERT shipments"]
-        T3["INSERT outbox_message"]
-    end
-    UNIQUE{{"🔒 shipments.order_id<br/>UNIQUE index"}}
-
-    MSG --> CHECK
-    CHECK -->|"VAR"| SKIP
-    CHECK -->|"YOK"| TX2
-    TX2 -.->|"son savunma hattı"| UNIQUE
-
-    classDef skip fill:#1c3d24,stroke:#3fb950,color:#f0f6fc
-    classDef tx fill:#0d2d4d,stroke:#1f6feb,color:#f0f6fc
-    classDef lock fill:#3d2f1c,stroke:#d29922,color:#f0f6fc
-    class SKIP skip
-    class T1,T2,T3 tx
-    class UNIQUE lock
-```
+<img alt="Inbox ve unique index ile iki katmanlı idempotency" src="assets/inbox.svg">
 
 | Katman | Neyi yakalar |
 |---|---|
@@ -388,11 +243,27 @@ sleep 2 && curl -s http://localhost:8083/api/shipments/by-order/$ORDER \
 
 ## 🔍 Kendi gözünle gör
 
-| Deney | Komut | Ne göreceksin |
-|---|---|---|
-| **Outbox** | `docker compose stop rabbitmq` → sipariş oluştur | **HTTP 201!** `order_db.outbox_message`'da 1 satır bekliyor. `start rabbitmq` → satır silinir, gönderi oluşur |
-| **Asenkronluk** | `docker compose stop shipment-service` → sipariş oluştur | RabbitMQ arayüzü → `order-created`: **Ready 1, Consumers 0**. *Get messages* ile zarfın içine bak |
-| **Idempotency** | Aynı zarfı `order-created` exchange'ine iki kez yayınla | `inbox_state.receive_count` **artar**, `shipments` **artmaz** |
+**1 · Outbox** — broker'ı çökert, sonra sipariş oluştur:
+
+```bash
+docker compose stop rabbitmq
+```
+
+**HTTP 201 alırsın.** `order_db.outbox_message`'da 1 satır bekliyor.
+`docker compose start rabbitmq` → satır silinir, gönderi oluşur. Hiçbir şey kaybolmaz.
+
+**2 · Asenkronluk** — tüketiciyi durdur, sonra sipariş oluştur:
+
+```bash
+docker compose stop shipment-service
+```
+
+RabbitMQ arayüzü → `order-created`: **Ready 1, Consumers 0**. Mesaj kayıp değil, *bekliyor*.
+*Get messages* ile zarfın içine bakabilirsin.
+
+**3 · Idempotency** — aynı zarfı `order-created` exchange'ine **iki kez** yayınla.
+`inbox_state.receive_count` **artar** (mesaj gerçekten geldi), `shipments` **artmaz**
+(consumer hiç çalışmadı).
 
 ```sql
 -- order_db: gönderilmeyi bekleyen event'ler (normalde boş)
@@ -439,13 +310,20 @@ Nasıl çalışıyor:
 
 ### Vitrin testleri
 
-| Test | Kanıtladığı |
-|---|---|
-| `CreateOrder_WhenBrokerIsUnreachable_StillWritesOrderAndOutboxRow` | Outbox broker'dan bağımsız |
-| `CreateOrder_WhenTransactionRollsBack_WritesNeitherOrderNorOutboxRow` | Atomiklik |
-| `Consume_WhenSameMessageArrivesTwice_CreatesSingleShipment` | Inbox / teknik idempotency |
-| `Consume_WhenDifferentMessageCarriesSameOrder_StillCreatesSingleShipment` | UNIQUE index / mantıksal idempotency |
-| `Consume_WhenMessageIsInvalid_WritesNothingAndMovesItToTheErrorQueue` | Retry + DLQ, yarım iş bırakmaz |
+- **Outbox broker'dan bağımsız** — broker çökükken bile sipariş ve event yazılır
+  `CreateOrder_WhenBrokerIsUnreachable_StillWritesOrderAndOutboxRow`
+
+- **Atomiklik** — transaction geri alınırsa ikisi de yazılmaz
+  `CreateOrder_WhenTransactionRollsBack_WritesNeitherOrderNorOutboxRow`
+
+- **Inbox / teknik idempotency** — aynı `messageId` iki kez → tek gönderi
+  `Consume_WhenSameMessageArrivesTwice_CreatesSingleShipment`
+
+- **UNIQUE index / mantıksal idempotency** — farklı `messageId`, aynı sipariş → tek gönderi
+  `Consume_WhenDifferentMessageCarriesSameOrder_StillCreatesSingleShipment`
+
+- **Retry + DLQ** — bozuk mesaj hata kuyruğuna düşer, yarım iş bırakmaz
+  `Consume_WhenMessageIsInvalid_WritesNothingAndMovesItToTheErrorQueue`
 
 ---
 
@@ -462,6 +340,7 @@ src/
 
 tests/                    102 test
 infrastructure/           veritabanı init script'i
+assets/                   şemalar (.svg) + Mermaid kaynakları (.mmd)
 docker-compose.yml        5 container
 ```
 

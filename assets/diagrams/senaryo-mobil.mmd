@@ -1,0 +1,23 @@
+flowchart TB
+    S1["👤 <b>Müşteri</b><br/>POST /api/auth/login"]
+    S2["🔑 <b>Auth</b><br/>JWT döner (rol: Customer)"]
+    S3["👤 POST /api/orders<br/>+ JWT"]
+    S4["📦 <b>Order Service</b><br/>⚛️ TEK TRANSACTION<br/>INSERT orders<br/>INSERT outbox_message"]
+    S5["✅ 201 Created<br/><i>müşteri beklemedi</i>"]
+    S6["⏱️ Arka plan servisi<br/>outbox'ı süpürür<br/>satır silinir"]
+    S7{{"🐇 order-created<br/>kuyruğu"}}
+    S8["🚚 <b>Shipment Service</b><br/>🛡️ inbox kontrolü<br/>⚛️ TEK TRANSACTION<br/>inbox_state + shipments<br/>+ outbox_message"]
+    S9["📨 ShipmentCreated<br/>yayınlanır"]
+    S10["👤 GET /shipments/by-order<br/>→ TR-2026-00001"]
+
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
+    S8 --> S10
+
+    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff
+    classDef tx fill:#0d2d4d,stroke:#1f6feb,color:#f0f6fc
+    classDef broker fill:#ff6600,stroke:#b34700,color:#fff
+    classDef ok fill:#1c3d24,stroke:#3fb950,color:#f0f6fc
+    class S2,S8 svc
+    class S4 tx
+    class S7 broker
+    class S5 ok

@@ -1,0 +1,32 @@
+flowchart LR
+    Client(["👤 Müşteri"])
+
+    Auth["🔑 <b>Auth Service</b><br/>:8081"]
+    Order["📦 <b>Order Service</b><br/>:8082"]
+    Ship["🚚 <b>Shipment Service</b><br/>:8083"]
+
+    Rabbit{{"🐇 <b>RabbitMQ</b>"}}
+
+    AuthDB[("🗄️ auth_db")]
+    OrderDB[("🗄️ order_db")]
+    ShipDB[("🗄️ shipment_db")]
+
+    Client -->|"① giriş yap"| Auth
+    Auth -.->|"JWT"| Client
+    Client -->|"② sipariş oluştur"| Order
+    Client -->|"④ gönderiyi sorgula"| Ship
+
+    Order ==>|"③ OrderCreated"| Rabbit
+    Rabbit ==>|"order-created"| Ship
+    Ship ==>|"ShipmentCreated"| Rabbit
+
+    Auth --- AuthDB
+    Order --- OrderDB
+    Ship --- ShipDB
+
+    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff
+    classDef db fill:#0d1117,stroke:#30363d,color:#c9d1d9
+    classDef broker fill:#ff6600,stroke:#b34700,color:#fff
+    class Auth,Order,Ship svc
+    class AuthDB,OrderDB,ShipDB db
+    class Rabbit broker

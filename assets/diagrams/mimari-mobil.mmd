@@ -1,0 +1,18 @@
+flowchart TB
+    Client(["👤 Müşteri"])
+    Auth["🔑 <b>Auth</b> :8081<br/>🗄️ auth_db"]
+    Order["📦 <b>Order</b> :8082<br/>🗄️ order_db"]
+    Rabbit{{"🐇 <b>RabbitMQ</b>"}}
+    Ship["🚚 <b>Shipment</b> :8083<br/>🗄️ shipment_db"]
+
+    Client -->|"① giriş → JWT"| Auth
+    Client -->|"② sipariş oluştur"| Order
+    Order ==>|"③ OrderCreated"| Rabbit
+    Rabbit ==>|"order-created"| Ship
+    Ship ==>|"ShipmentCreated"| Rabbit
+    Client -->|"④ gönderiyi sorgula"| Ship
+
+    classDef svc fill:#1f6feb,stroke:#0d419d,color:#fff
+    classDef broker fill:#ff6600,stroke:#b34700,color:#fff
+    class Auth,Order,Ship svc
+    class Rabbit broker

@@ -1,0 +1,16 @@
+flowchart TB
+    API["🌐 <b>Api</b> — Controller · Program.cs<br/><i>dışarıyla konuşur, her şeyi bağlar</i>"]
+    INF["⚙️ <b>Infrastructure</b> — EF Core · MassTransit · Consumer<br/><i>NASIL yapılır</i>"]
+    APP["📋 <b>Application</b> — Command · Query · Handler · <b>interface'ler</b><br/><i>NE yapılır</i>"]
+    DOM["💎 <b>Domain</b> — Entity + iş kuralları<br/><i>sıfır NuGet paketi</i>"]
+
+    API --> INF --> APP --> DOM
+
+    classDef l1 fill:#1f6feb,stroke:#0d419d,color:#fff
+    classDef l2 fill:#8957e5,stroke:#6639ba,color:#fff
+    classDef l3 fill:#2ea043,stroke:#1a7f37,color:#fff
+    classDef l4 fill:#d29922,stroke:#9e6a03,color:#fff
+    class API l1
+    class INF l2
+    class APP l3
+    class DOM l4

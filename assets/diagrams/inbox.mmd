@@ -1,0 +1,22 @@
+flowchart TB
+    MSG(["📨 messageId = abc-123"])
+    CHECK{"inbox_state'te<br/>abc-123 var mı?"}
+    SKIP["✋ Consumer HİÇ çalışmaz"]
+    subgraph TX2["⚛️ TEK TRANSACTION"]
+        T1["INSERT inbox_state"]
+        T2["INSERT shipments"]
+        T3["INSERT outbox_message"]
+    end
+    UNIQUE{{"🔒 shipments.order_id<br/>UNIQUE index"}}
+
+    MSG --> CHECK
+    CHECK -->|"VAR"| SKIP
+    CHECK -->|"YOK"| TX2
+    TX2 -.->|"son savunma hattı"| UNIQUE
+
+    classDef skip fill:#1c3d24,stroke:#3fb950,color:#f0f6fc
+    classDef tx fill:#0d2d4d,stroke:#1f6feb,color:#f0f6fc
+    classDef lock fill:#3d2f1c,stroke:#d29922,color:#f0f6fc
+    class SKIP skip
+    class T1,T2,T3 tx
+    class UNIQUE lock
