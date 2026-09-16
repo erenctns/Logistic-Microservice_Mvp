@@ -14,7 +14,7 @@ sequenceDiagram
     M->>O: POST /api/orders + JWT
     Note over O: customerId token'ın "sub" claim'inden —<br/>istemcinin gönderdiğine güvenilmez
 
-    rect rgb(210, 235, 255)
+    rect rgb(13, 45, 77)
     Note over O,ODB: ⚛️ TEK TRANSACTION
     O->>ODB: INSERT orders
     O->>ODB: INSERT outbox_message
@@ -27,7 +27,7 @@ sequenceDiagram
     ODB->>ODB: outbox satırı silinir
     R->>S: order-created kuyruğu
 
-    rect rgb(255, 235, 210)
+    rect rgb(61, 47, 28)
     Note over S,SDB: 🛡️ inbox kontrolü + TEK TRANSACTION
     S->>SDB: bu message_id işlendi mi?
     S->>SDB: INSERT inbox_state
