@@ -351,7 +351,7 @@ public class InboxTests(PostgresFixture postgres, RabbitMqFixture rabbit)
             cancellationToken);
     }
 
-    // DIKKAT (Step 07'de yasandi): IBusControl.StartAsync YETMEZ.
+    // DIKKAT: IBusControl.StartAsync YETMEZ.
     // Outbox'i suren ve kuyruklari acan sey hosted service'lerdir;
     // uygulamada onlari ASP.NET host'u baslatir, burada biz baslatiyoruz.
     private static async Task StartAsync(

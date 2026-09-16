@@ -6,7 +6,7 @@ namespace SmartLogistics.BuildingBlocks.IntegrationTests.Fixtures;
 
 // Bu sinif is kurali test etmiyor — TEST ALTYAPISININ kendisini dogruluyor.
 // "Container kalkiyor mu, gercek SQL calisiyor mu, Respawn temizliyor mu?"
-// Step 05'ten itibaren gercek DbContext testleri bu fixture'in uzerine oturacak.
+// Gercek DbContext testleri bu fixture'in uzerine oturuyor.
 [Collection(nameof(PostgresCollection))]
 public class PostgresFixtureTests(PostgresFixture fixture)
 {

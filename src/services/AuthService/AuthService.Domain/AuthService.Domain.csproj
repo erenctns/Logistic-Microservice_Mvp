@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- MIMARI KURAL: burada ASLA <PackageReference> olmayacak.
-       Step 05'te Identity kullanici entity'si ve roller buraya gelecek. -->
+  <!-- MIMARI KURAL: burada ASLA <PackageReference> olmayacak. -->
 
   <ItemGroup>
     <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.Domain/BuildingBlocks.Domain.csproj" />

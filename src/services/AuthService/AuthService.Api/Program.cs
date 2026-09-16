@@ -8,7 +8,7 @@ using SmartLogistics.AuthService.Infrastructure.Persistence;
 var builder = WebApplication.CreateBuilder(args);
 
 // Composition root: her katman kendi kayitlarini kendi yapar.
-// Bu satir Step 05'te 20 servis eklense bile DEGISMEZ.
+// Katmana kac kayit eklenirse eklensin bu satir degismez.
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);

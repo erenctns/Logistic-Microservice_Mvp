@@ -4,8 +4,8 @@ namespace SmartLogistics.Contracts;
 // claim'ine bu degerleri yazar, diger bes servis [Authorize(Roles = ...)]
 // ile ayni degerleri okur. Tek kaynak burasi olmali.
 //
-// Step 05'te AuthService.Domain'deydi; Order Service de ihtiyac duyunca
-// (ikinci kullanim) ortak sozlesme projesine tasindi. Iki serviste iki ayri
+// Onceden AuthService.Domain'deydi; ikinci bir servis ihtiyac duyunca
+// ortak sozlesme projesine tasindi. Iki serviste iki ayri
 // "Customer" sabiti olsaydi biri degistiginde digeri sessizce bozulurdu.
 //
 // string sabit: rol adi hem JWT claim'inde hem attribute'ta geciyor,

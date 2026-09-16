@@ -4,10 +4,10 @@ namespace SmartLogistics.BuildingBlocks.Domain.Primitives;
 // OrderCreated, ShipmentDispatched. ("CreateOrder" bir komuttur, event degil.)
 //
 // Entity bu olayi sadece kendi listesine ekler; RabbitMQ'ya yazmaz.
-// Domain katmani disariyi tanimaz — duyurmak altyapinin isidir (Step 07).
+// Domain katmani disariyi tanimaz — duyurmak altyapinin isidir.
 public interface IDomainEvent
 {
-    // Olayin kimligi. Idempotent consumer (Step 08) bunu kullanacak.
+    // Olayin kimligi. Idempotent consumer bunu anahtar olarak kullanir.
     Guid EventId { get; }
 
     // Olayin gerceklestigi an (UTC).

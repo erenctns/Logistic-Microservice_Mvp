@@ -2,6 +2,12 @@
 # ==========================================================
 #  Database-per-service: her servis icin ayri veritabani.
 #
+#  Tek bir PostgreSQL container'i var ama servisler AYRI
+#  veritabanlarini kullaniyor. Boylece "bir servis digerinin
+#  tablosuna JOIN atar" kazasi yapisal olarak imkansiz.
+#  Uretimde her biri ayri sunucuya tasinabilir; degisen tek
+#  sey connection string olur.
+#
 #  Bu script YALNIZCA postgres veri dizini bosken calisir
 #  (yani ilk "docker compose up" veya "down -v" sonrasi).
 #  Sonraki aciliste entrypoint burayi hic okumaz.
@@ -28,7 +34,7 @@ create_database() {
 
 echo "[init] database-per-service: veritabanlari hazirlaniyor"
 
-for db in "$AUTH_DB" "$ORDER_DB" "$SHIPMENT_DB" "$COURIER_DB" "$DELIVERY_DB" "$NOTIFICATION_DB"; do
+for db in "$AUTH_DB" "$ORDER_DB" "$SHIPMENT_DB"; do
     create_database "$db"
 done
 

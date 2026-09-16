@@ -10,7 +10,7 @@ public sealed record UserInfo(Guid Id, string Email, string FullName, IReadOnlyL
 // Infrastructure'da yasar. Handler'lar onu dogrudan kullansaydi Application
 // katmani Identity'ye bagimli olurdu — bagimlilik oku disari donerdi.
 //
-// Yan fayda: handler testlerinde bu interface mock'lanabilir (Step 5f).
+// Yan fayda: handler testlerinde bu interface mock'lanabilir .
 public interface IIdentityService
 {
     Task<Result<Guid>> RegisterAsync(

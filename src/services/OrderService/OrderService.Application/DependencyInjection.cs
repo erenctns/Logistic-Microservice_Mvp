@@ -5,8 +5,8 @@ using SmartLogistics.OrderService.Application.Common.Behaviors;
 
 namespace SmartLogistics.OrderService.Application;
 
-// Auth Service ile AYNI kalip. Step 04'te sablon uretmemizin karsiligi:
-// bu dosya servisten servise degismiyor, sadece assembly farkli.
+// Auth Service ile AYNI kalip: bu dosya servisten servise degismiyor,
+// sadece assembly farkli.
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)

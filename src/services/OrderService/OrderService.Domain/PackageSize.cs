@@ -1,7 +1,7 @@
 namespace SmartLogistics.OrderService.Domain;
 
-// Paket boyutu. Step 11'de kurye secim algoritmasinda kullanilacak:
-// buyuk paket motosikletle tasinamaz.
+// Paket boyutu. Su an yalnizca tasiniyor ve saklaniyor; bir kurye secim
+// algoritmasi eklenirse karar girdisi olur (buyuk paket motosikletle tasinamaz).
 public enum PackageSize
 {
     Small = 0,

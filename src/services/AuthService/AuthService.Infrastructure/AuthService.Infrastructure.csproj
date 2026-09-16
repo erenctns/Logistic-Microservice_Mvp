@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- "NASIL yapilir" katmani: EF Core, Identity, RabbitMQ gibi teknoloji
-       paketleri Step 05'ten itibaren buraya gelecek.
+  <!-- "NASIL yapilir" katmani: EF Core, Identity gibi teknoloji paketleri burada.
        Configuration.Abstractions: AddInfrastructure(IConfiguration) imzasi icin. -->
 
   <ItemGroup>

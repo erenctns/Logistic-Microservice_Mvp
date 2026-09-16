@@ -46,8 +46,8 @@ public sealed class Shipment : BaseEntity
     public string DeliveryAddress { get; private set; } = string.Empty;
 
     // Neden enum degil string? Cunku bu servis paket boyutuna gore HICBIR
-    // karar vermiyor; degeri Delivery Service'e (Step 11, kurye secimi)
-    // tasiyor, o kadar. Enum'u burada da tanimlarsak ayni kavramin ikinci
+    // karar vermiyor; degeri aldigi gibi yayinladigi event'e tasiyor.
+    // Enum'u burada da tanimlarsak ayni kavramin ikinci
     // bir dogruluk kaynagi olur ve Order'a her yeni boyut eklendiginde
     // burayi da guncellemek gerekir. Anlamlandirmadigimiz veriyi oldugu
     // gibi tasimak daha durust.
@@ -107,13 +107,13 @@ public sealed class Shipment : BaseEntity
             packageSize.Trim());
     }
 
-    // Step 11: CourierAssigned event'i geldiginde cagrilacak.
+    // Asagidaki gecisleri su an tetikleyen bir giris yolu yok: gonderi
+    // olusturulup Created'da kaliyor. Kural yine de entity'de eksiksiz
+    // duruyor — bir teslimat akisi eklenirse cagiracagi yer burasi.
     public Result MarkAssigned() => TransitionTo(ShipmentStatus.Assigned, from: ShipmentStatus.Created);
 
-    // Step 12: DeliveryStarted event'i geldiginde cagrilacak.
     public Result MarkInTransit() => TransitionTo(ShipmentStatus.InTransit, from: ShipmentStatus.Assigned);
 
-    // Step 12: Delivered event'i geldiginde cagrilacak.
     public Result MarkDelivered() => TransitionTo(ShipmentStatus.Delivered, from: ShipmentStatus.InTransit);
 
     private Result TransitionTo(ShipmentStatus target, ShipmentStatus from) =>

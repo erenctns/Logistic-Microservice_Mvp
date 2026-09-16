@@ -25,7 +25,6 @@ namespace SmartLogistics.Contracts;
 //      consumer'lar eski alani okumaya devam eder. Yeni alan eklemek
 //      (nullable olarak) guvenlidir. Katalog: docs/EVENTS.md
 //
-// Ilk gercek sozlesme Step 07'de gelecek: OrderCreated.
 
 // Testlerin ve DI taramalarinin "bu assembly" demesi icin tip guvenli isaret.
 public sealed class ContractsAssembly;

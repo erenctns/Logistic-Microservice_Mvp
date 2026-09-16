@@ -23,7 +23,8 @@ public class OrderDbContext(DbContextOptions<OrderDbContext> options) : DbContex
         //
         //   outbox_message : gonderilecek event'in kendisi (JSON)
         //   outbox_state   : hangi mesajlarin teslim edildigi
-        //   inbox_state    : ALINAN mesajlarin kimligi -> idempotency (Step 08)
+        //   inbox_state    : ALINAN mesajlarin kimligi -> idempotency
+        //                    (bu serviste BOS kalir: Order hicbir sey tuketmiyor)
         modelBuilder.AddOutboxMessageEntity();
         modelBuilder.AddOutboxStateEntity();
         modelBuilder.AddInboxStateEntity();

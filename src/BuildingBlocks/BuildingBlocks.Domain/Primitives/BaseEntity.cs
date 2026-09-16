@@ -18,7 +18,7 @@ public abstract class BaseEntity
     }
 
     // Neden int degil Guid? ID'yi veritabanina gitmeden, kod tarafinda uretebilmek icin.
-    // Step 07'de siparis satiri ile event satirini AYNI transaction'da yazacagiz;
+    // Siparis satiri ile event satiri AYNI transaction'da yaziliyor;
     // event'in icine ID'yi koyarken INSERT'in donmesini bekleyemeyiz.
     public Guid Id { get; protected init; }
 

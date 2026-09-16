@@ -137,7 +137,7 @@ public class OutboxTests(PostgresFixture postgres, RabbitMqFixture rabbit)
         // onu broker'a basiyor, BASKA BIR SERVIS aliyor.
         //
         // Consumer'i ayri bir DI kabinda kuruyoruz — cunku gercekte de ayri
-        // bir process'te (Step 08'de Shipment Service) yasayacak. Ayni kapta
+        // bir process'te (Shipment Service) yasiyor. Ayni kapta
         // iki bus kurulamaz zaten: AddMassTransit container basina bir kez.
         var received = new TaskCompletionSource<OrderCreated>(TaskCreationOptions.RunContinuationsAsynchronously);
         var cancellationToken = TestContext.Current.CancellationToken;

@@ -6,7 +6,7 @@ namespace SmartLogistics.BuildingBlocks.Infrastructure.Messaging;
 // IEventBus'in MassTransit ile gerceklestirimi: tek isi cagriyi
 // IPublishEndpoint'e devretmek.
 //
-// Step 07'de outbox devreye girdiginde bu sinifin kodu DEGISMEYECEK:
+// Outbox devreye girdiginde bu sinifin kodu DEGISMEDI:
 // MassTransit, DbContext'e bagli bir scope icinde IPublishEndpoint'i
 // outbox'a yazan bir implementasyonla degistiriyor. Yani "once veritabanina
 // yaz, sonra yayinla" davranisi konfigurasyonla geliyor, kodla degil.

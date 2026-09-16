@@ -15,8 +15,9 @@ namespace SmartLogistics.AuthService.Infrastructure.Persistence;
 public static class AuthDbSeeder
 {
     // SABIT GUID'ler. Neden rastgele degil?
-    // Step 09'da Courier Service bu kullanicilara kendi kurye kayitlarini
-    // baglayacak. Id her acilista degisirse o baglanti kurulamaz.
+    // Baska servisler bu kullanicilara kendi kayitlarini baglayabilsin diye.
+    // Id her acilista degisseydi, container yeniden basladiginda diger
+    // servislerdeki referanslar bosluga isaret ederdi.
     private static readonly Guid AdminId = new("11111111-1111-1111-1111-111111111111");
     private static readonly Guid CustomerId = new("22222222-2222-2222-2222-222222222222");
 

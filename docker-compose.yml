@@ -1,20 +1,21 @@
 # ==========================================================
-#  Smart Logistics — local altyapi
-#  Bu dosyada SADECE altyapi var. .NET servisleri Step 04'ten
-#  itibaren eklenecek ve depends_on ile asagidaki healthcheck'leri
-#  bekleyecek.
+#  Logistics Microservice MVP — local calisma ortami
+#  Altyapi (postgres, rabbitmq) ve uc .NET servisi. Servisler
+#  depends_on ile altyapinin healthcheck'lerini bekler.
 #
 #  Calistirmak icin:  cp .env.example .env  &&  docker compose up -d
 # ==========================================================
 
 # Proje adi: container/volume/network on eki. Verilmezse klasor
-# adi kullanilir ("smart-logistics-platform-microservice") — uzun ve cirkin.
+# adi kullanilir — uzun ve okunaksiz olurdu.
 name: smart-logistics
 
 services:
 
   # ---------------------------------------------------------
-  #  PostgreSQL — database-per-service (tek container, 6 db)
+  #  PostgreSQL — database-per-service (tek container, 3 ayri db)
+  #  Uretimde her db ayri sunucuya tasinabilir; degisen tek sey
+  #  servislerin ConnectionStrings degeri olur.
   # ---------------------------------------------------------
   postgres:
     image: postgres:17-alpine
@@ -30,9 +31,6 @@ services:
       AUTH_DB: ${AUTH_DB}
       ORDER_DB: ${ORDER_DB}
       SHIPMENT_DB: ${SHIPMENT_DB}
-      COURIER_DB: ${COURIER_DB}
-      DELIVERY_DB: ${DELIVERY_DB}
-      NOTIFICATION_DB: ${NOTIFICATION_DB}
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
@@ -53,7 +51,7 @@ services:
 
   # ---------------------------------------------------------
   #  RabbitMQ — event broker (+ management UI)
-  #  Exchange/queue burada TANIMLANMIYOR; Step 06'da kod declare edecek.
+  #  Exchange/queue burada TANIMLANMIYOR; MassTransit acilista declare eder.
   # ---------------------------------------------------------
   rabbitmq:
     image: rabbitmq:4-management
@@ -79,9 +77,9 @@ services:
       - logistics-net
 
   # ---------------------------------------------------------
-  #  Auth Service — ilk mikroservis
-  #  Bu blok sonraki 5 servise sablon olacak: degisen sadece
-  #  isim, port ve database.
+  #  Auth Service — kimlik ve token uretimi
+  #  Bu blok diger servislere sablon: degisen sadece isim,
+  #  port ve database. Auth broker'a BAGLANMAZ (event yayinlamaz).
   # ---------------------------------------------------------
   auth-service:
     build:
@@ -125,9 +123,9 @@ services:
       - logistics-net
 
   # ---------------------------------------------------------
-  #  Order Service — sablonun ikinci kopyasi
-  #  Auth'tan farki: kendi database'i, kendi portu ve
-  #  RabbitMQ'ya baglanmasi (event yayinlayacak).
+  #  Order Service — YAYINCI
+  #  Auth'tan farki: kendi database'i, kendi portu ve RabbitMQ'ya
+  #  baglanmasi. OrderCreated event'ini outbox uzerinden yayinlar.
   # ---------------------------------------------------------
   order-service:
     build:
@@ -166,9 +164,9 @@ services:
       - logistics-net
 
   # ---------------------------------------------------------
-  #  Shipment Service — sablonun ucuncu kopyasi
-  #  Order'dan farki: event YAYINLAMAKLA kalmiyor, TUKETIYOR da.
-  #  RabbitMQ'ya baglanamazsa kuyrugunu acamaz -> depends_on sart.
+  #  Shipment Service — TUKETICI + YAYINCI
+  #  OrderCreated'i dinler (inbox ile idempotent), gonderi olusturur,
+  #  ShipmentCreated yayinlar. Kuyrugunu acilista kendisi declare eder.
   # ---------------------------------------------------------
   shipment-service:
     build:

@@ -3,7 +3,7 @@ namespace SmartLogistics.BuildingBlocks.Infrastructure.Authentication;
 // appsettings'te DEGIL, ortam degiskeninde:
 //   Jwt__Key, Jwt__Issuer, Jwt__Audience, Jwt__ExpiryMinutes
 //
-// Step 05'te AuthService'e ozeldi; Order Service de token DOGRULAMAK zorunda
+// Onceden AuthService'e ozeldi; diger servisler de token DOGRULAMAK zorunda
 // oldugu icin ortak katmana tasindi. Token URETIMI hala Auth'a ozel.
 public sealed class JwtOptions
 {

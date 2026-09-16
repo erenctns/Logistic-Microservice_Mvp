@@ -15,12 +15,12 @@ public enum ShipmentStatus
     // Gonderi olusturuldu, henuz kurye atanmadi.
     Created = 0,
 
-    // Kurye atandi (Step 11'de CourierAssigned event'i ile gelecek).
+    // Kurye atandi.
     Assigned = 1,
 
-    // Kurye yola cikti (Step 12).
+    // Kurye yola cikti.
     InTransit = 2,
 
-    // Teslim edildi (Step 12).
+    // Teslim edildi.
     Delivered = 3,
 }

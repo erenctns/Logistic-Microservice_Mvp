@@ -2,7 +2,7 @@ namespace SmartLogistics.Contracts.Events;
 
 // PROJENIN ILK GERCEK SOZLESMESI.
 //
-// Order Service yayinlar, Shipment Service dinler (Step 08). Ikisi de AYNI
+// Order Service yayinlar, Shipment Service dinler. Ikisi de AYNI
 // CLR tipini referans eder — MassTransit exchange adini tipin tam adindan
 // uretir: "SmartLogistics.Contracts.Events:OrderCreated".
 //

@@ -60,11 +60,11 @@ public sealed class Order : BaseEntity
         return new Order(Guid.NewGuid(), customerId, address, packageSize);
     }
 
-    // Step 11: siparis yasam dongusu event'lerle surulunce cagrilacak.
-    // (Step 08'de Shipment Service olustu ama Order henuz consumer degil.)
+    // Su an cagiran yok: Order Service hicbir event dinlemiyor, yalnizca
+    // yayinliyor. Durum makinesi yine de eksiksiz tanimli — kural entity'de
+    // yasar, onu tetikleyen giris yolu sonradan eklenebilir.
     public Result MarkAsProcessing() => TransitionTo(OrderStatus.Processing, from: OrderStatus.Pending);
 
-    // Step 12: Delivered event'i geldiginde cagrilacak.
     public Result Complete() => TransitionTo(OrderStatus.Completed, from: OrderStatus.Processing);
 
     // Tamamlanmis veya zaten iptal edilmis siparis iptal edilemez.

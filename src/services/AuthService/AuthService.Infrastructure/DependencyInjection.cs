@@ -47,14 +47,12 @@ public static class DependencyInjection
         // Application'da TANIMLANAN sozlesme, burada Identity ile karsilaniyor.
         services.AddScoped<IIdentityService, IdentityService>();
 
-        // JWT DOGRULAMA ortak katmanda (alti servis de kullanacak).
+        // JWT DOGRULAMA ortak katmanda: her servis ayni kodu kullanir.
         services.AddJwtAuthentication(configuration);
 
         // Token URETIMI Auth Service'e ozel: sadece o token dagitir.
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
-        // Step 06: IEventBus -> RabbitMqEventBus
-        // Step 07: OutboxPublisher (BackgroundService)
         return services;
     }
 
